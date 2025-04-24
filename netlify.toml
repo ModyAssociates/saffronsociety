@@ -1,19 +1,35 @@
-# netlify.toml (place this next to package.json in your repo root)
+# netlify.toml (place at the very root of your repo)
+
+################################################################################
+# Build settings for production deploys on Netlify
+################################################################################
 
 [build]
-  # (used only on real deploys)
-  command   = "npm run build"
-  publish   = "dist"
-  functions = "../netlify/functions"
+  # Run the build script from inside the `project/` folder
+  command   = "npm --prefix project run build"
+  # Publish the contents of project/dist (Vite’s default output) as the site
+  publish   = "project/dist"
+  # Point at your functions folder (relative to this toml file)
+  functions = "netlify/functions"
+
+################################################################################
+# Dev settings for `netlify dev` locally
+################################################################################
 
 [dev]
-  # when you run `netlify dev`, do this:
-  command    = "npm run dev"        # your Vite dev command
-  targetPort = 5173                  # Vite’s default dev port
-  port       = 8888                  # the port you’ll open in the browser
-  functions  = "../netlify/functions"   # same functions folder
+  # When you run `netlify dev`, run Vite from project/
+  command    = "npm --prefix project run dev"
+  # Vite’s local dev server port
+  targetPort = 5173
+  # Port that Netlify Dev will expose (you’ll open this in your browser)
+  port       = 8888
+  # Same functions folder as above
+  functions  = "netlify/functions"
 
-# redirect all URLs to index.html so your SPA routes still work
+################################################################################
+# SPA Redirect (so /products/123 still routes to index.html in dev & prod)
+################################################################################
+
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
