@@ -1,7 +1,5 @@
 // netlify/functions/printify-products.js
 
-const fetch = require('node-fetch');
-
 exports.handler = async (event) => {
   const token  = process.env.PRINTIFY_API_TOKEN;
   const shopId = process.env.PRINTIFY_SHOP_ID;
