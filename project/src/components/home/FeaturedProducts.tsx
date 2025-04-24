@@ -12,15 +12,20 @@ const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      const featuredProducts = await getFeaturedProducts();
-      setProducts(featuredProducts);
+useEffect(() => {
+  const load = async () => {
+    try {
+      const featured = await getFeaturedProducts();
+      setProducts(featured);
+    } catch (err) {
+      console.error('FeaturedProducts load error:', err);
+    } finally {
       setLoading(false);
-    };
-    loadProducts();
-  }, []);
-
+    }
+  };
+  load();
+}, []);
+  
   if (loading) {
     return (
       <section className="py-16">
