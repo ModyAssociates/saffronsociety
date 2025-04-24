@@ -1,7 +1,7 @@
 // src/services/printify.ts
 
 /**
- * These mirror Printify's response shapes.
+ * These mirror Printify’s API models.
  */
 interface PrintifyImage {
   src: string;
@@ -24,7 +24,7 @@ interface PrintifyProduct {
 }
 
 /**
- * Your app's product shape.
+ * The shape your UI expects.
  */
 export interface Product {
   id: string;
@@ -36,35 +36,33 @@ export interface Product {
 }
 
 /**
- * Netlify Function prefix.
- * Netlify will expose your two functions at:
- * /.netlify/functions/printify-shops
- * /.netlify/functions/printify-products
+ * Points at your Netlify Functions.
  */
 const NETLIFY_FN = '/.netlify/functions';
 
 /**
- * Fetches from your `printify-products` Netlify Function,
- * then maps PrintifyProduct → your Product type.
+ * Fetch all of the shop’s products via your
+ * `printify-products` Function.
  */
 export async function fetchPrintifyProducts(): Promise<Product[]> {
+  console.log('[printify.ts] fetching:', `${NETLIFY_FN}/printify-products`);
   const res = await fetch(`${NETLIFY_FN}/printify-products`);
+  console.log('[printify.ts] status:', res.status);
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Failed to fetch Printify products: ${errText}`);
+    const text = await res.text();
+    console.error('[printify.ts] error body:', text);
+    throw new Error(`Printify proxy error: ${res.status} ${text}`);
   }
 
-  // The Netlify function returns the same JSON as Printify:
-  // { data: PrintifyProduct[] }
+  // Parse it — your Function returns exactly what Printify did,
+  // i.e. { data: PrintifyProduct[] }
   const payload = (await res.json()) as { data: PrintifyProduct[] };
+  console.log('[printify.ts] got payload.data length =', payload.data.length);
 
   return payload.data.map((p) => {
-    // pick the default image (or first)
-    const defaultImage = p.images.find((img) => img.is_default) || p.images[0];
-    // pick an enabled variant (or first)
-    const activeVariant = p.variants.find((v) => v.is_enabled) || p.variants[0];
-    // use the first tag (or fallback)
-    const category = p.tags?.[0]?.toLowerCase() || 'classics';
+    const defaultImage   = p.images.find((i) => i.is_default) || p.images[0];
+    const activeVariant  = p.variants.find((v) => v.is_enabled) || p.variants[0];
+    const categoryTag    = p.tags?.[0]?.toLowerCase() || 'classics';
 
     return {
       id:          p.id,
@@ -72,7 +70,7 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
       description: p.description || 'Vintage Bollywood T-Shirt',
       price:       activeVariant?.price ?? 29.99,
       image:       defaultImage?.src ?? '/placeholder.jpg',
-      category,
+      category:    categoryTag,
     };
   });
 }
