@@ -2,14 +2,14 @@
   base      = "project"              # <— tell Netlify to cd into project/
   command   = "npm run build"        # now this runs inside project/
   publish   = "dist"                 # Vite’s default output in project/dist
-  functions = "../netlify/functions" # functions live one level up
+  functions = "netlify/functions" # functions live one level up
 
 [dev]
   base       = "project"
   command    = "npm run dev"
   targetPort = 5173
   port       = 8888
-  functions  = "../netlify/functions"
+  functions  = "netlify/functions"
 
 [[redirects]]
   from   = "/*"
