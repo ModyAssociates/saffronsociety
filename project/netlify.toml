@@ -1,12 +1,20 @@
+# netlify.toml
 [build]
-  # → this must match your functions directory
-  functions = "netlify/functions"
+  # (for your production deploy)
+  publish   = "dist"                # or "build" if you're using CRA
+  functions = "netlify/functions"  # where your lambdas live
 
-  # if you build before deploy, add these lines (adjust to your build setup):
-  # publish   = "build"
-  # command   = "npm run build"
+[dev]
+  # command Netlify Dev should run to start your front-end
+  command    = "npm run dev"
+  # the port your front-end dev server listens on
+  targetPort = 5173
+  # the port Netlify Dev will expose in your browser (you’ll visit this)
+  port       = 8888
+  # reuse the same functions folder from [build]
+  functions  = "netlify/functions"
 
-# redirect all SPA routes to index.html
+# optional SPA redirect so routes like /products/123 still work
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
