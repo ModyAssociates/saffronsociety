@@ -1,0 +1,20 @@
+# netlify.toml (place this next to package.json in your repo root)
+
+[build]
+  # (used only on real deploys)
+  publish   = "dist"                 # or "build" if you’re using CRA
+  command   = "npm run build"
+  functions = "netlify/functions"    # where your lambdas live
+
+[dev]
+  # when you run `netlify dev`, do this:
+  command    = "npm run dev"         # your Vite dev command
+  targetPort = 5173                  # Vite’s default dev port
+  port       = 8888                  # the port you’ll open in the browser
+  functions  = "netlify/functions"   # same functions folder
+
+# redirect all URLs to index.html so your SPA routes still work
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
