@@ -1,7 +1,5 @@
 // netlify/functions/printify-shops.js
 
-const fetch = require('node-fetch');
-
 exports.handler = async (event) => {
   const token = process.env.PRINTIFY_API_TOKEN;
   if (!token) {
