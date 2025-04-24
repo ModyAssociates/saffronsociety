@@ -1,0 +1,13 @@
+[build]
+  # → this must match your functions directory
+  functions = "netlify/functions"
+
+  # if you build before deploy, add these lines (adjust to your build setup):
+  # publish   = "build"
+  # command   = "npm run build"
+
+# redirect all SPA routes to index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
