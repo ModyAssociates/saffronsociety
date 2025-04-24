@@ -1,20 +1,19 @@
-# netlify.toml
+# netlify.toml (place this next to package.json in your repo root)
+
 [build]
-  # (for your production deploy)
-  publish   = "dist"                # or "build" if you're using CRA
-  functions = "netlify/functions"  # where your lambdas live
+  # (used only on real deploys)
+  publish   = "dist"                 # or "build" if you’re using CRA
+  command   = "npm run build"
+  functions = "netlify/functions"    # where your lambdas live
 
 [dev]
-  # command Netlify Dev should run to start your front-end
-  command    = "npm run dev"
-  # the port your front-end dev server listens on
-  targetPort = 5173
-  # the port Netlify Dev will expose in your browser (you’ll visit this)
-  port       = 8888
-  # reuse the same functions folder from [build]
-  functions  = "netlify/functions"
+  # when you run `netlify dev`, do this:
+  command    = "npm run dev"         # your Vite dev command
+  targetPort = 5173                  # Vite’s default dev port
+  port       = 8888                  # the port you’ll open in the browser
+  functions  = "netlify/functions"   # same functions folder
 
-# optional SPA redirect so routes like /products/123 still work
+# redirect all URLs to index.html so your SPA routes still work
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
