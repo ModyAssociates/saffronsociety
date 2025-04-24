@@ -2,9 +2,9 @@
 
 [build]
   # (used only on real deploys)
-  publish   = "dist"                 # or "build" if you’re using CRA
-  command   = "npm run build"
-  functions = "netlify/functions"    # where your lambdas live
+  command   = "npm --prefix project run build"
+  publish   = "project/dist"         # or "project/build" if you’re using CRA
+  functions = "netlify/functions"
 
 [dev]
   # when you run `netlify dev`, do this:
