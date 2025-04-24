@@ -1,25 +1,28 @@
-import { Product } from '../types';
+// src/data/products.ts
+
+import type { Product } from '../services/printify';
 import { fetchPrintifyProducts } from '../services/printify';
 
-// Fallback products in case the API fails
-const fallbackProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Sholay Gabbar T-Shirt',
-    description: 'Iconic "Kitne Aadmi The?" design featuring the legendary Gabbar Singh',
-    price: 29.99,
-    image: '/placeholder.jpg',
-    category: 'classics'
-  },
-  // Add more fallback products if needed
-];
-
+/**
+ * Load all products (from Printify).
+ */
 export async function fetchProducts(): Promise<Product[]> {
-  const products = await fetchPrintifyProducts();
-  return products.length > 0 ? products : fallbackProducts;
+  console.log('[products.ts] fetchProducts() start');
+  try {
+    const products = await fetchPrintifyProducts();
+    console.log('[products.ts] fetchProducts() got', products.length, 'items');
+    return products;
+  } catch (error) {
+    console.error('[products.ts] fetchProducts() error:', error);
+    // Fallback to an empty array (or local mock data if you like)
+    return [];
+  }
 }
 
+/**
+ * Return the first N as “featured.”
+ */
 export async function getFeaturedProducts(): Promise<Product[]> {
-  const products = await fetchProducts();
-  return products.slice(0, 4);
+  const all = await fetchProducts();
+  return all.slice(0, 4);
 }
