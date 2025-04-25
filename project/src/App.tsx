@@ -1,4 +1,3 @@
-// project/src/App.tsx
 import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
