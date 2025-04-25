@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
-import { Product } from '../../services/printify';
+import { Product } from '../../services/printify';       // ← import from services, not ../types
 import { getFeaturedProducts } from '../../data/products';
 import { useEffect, useState } from 'react';
 
@@ -13,9 +13,10 @@ const FeaturedProducts = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       try {
         const featured = await getFeaturedProducts();
+        console.log('🛍️ FeaturedProducts loaded:', featured);
         setProducts(featured);
       } catch (err) {
         console.error('FeaturedProducts load error:', err);
@@ -28,10 +29,18 @@ const FeaturedProducts = () => {
   if (loading) {
     return (
       <section className="py-16">
-        <div className="container-custom">
-          <div className="text-center">
-            <p>Loading products...</p>
-          </div>
+        <div className="container-custom text-center">
+          <p>Loading products…</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <section className="py-16">
+        <div className="container-custom text-center">
+          <p>No products to show</p>
         </div>
       </section>
     );
@@ -51,14 +60,14 @@ const FeaturedProducts = () => {
         </motion.h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.map((product, index) => (
+          {products.map((product, i) => (
             <motion.div
               key={product.id}
               className="cursor-pointer"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
+              transition={{ duration: 0.4, delay: i * 0.1 }}
             >
               {/* IMAGE CARD */}
               <div
@@ -90,7 +99,6 @@ const FeaturedProducts = () => {
                 >
                   {product.name}
                 </h3>
-
                 <div className="flex items-baseline justify-between mt-1">
                   <span className="text-xl font-semibold text-maroon">
                     ${product.price.toFixed(2)}
@@ -99,13 +107,19 @@ const FeaturedProducts = () => {
 
                 {/* COLOR SWATCHES */}
                 <div className="flex items-center space-x-2 mt-3">
-                  {product.colors.map((hex) => (
-                    <span
-                      key={hex}
-                      className="w-6 h-6 rounded-full border border-gray-300"
-                      style={{ backgroundColor: hex }}
-                    />
-                  ))}
+                  {product.colors.length > 0 ? (
+                    product.colors.map((hex) => (
+                      <span
+                        key={hex}
+                        className="w-6 h-6 rounded-full border border-gray-300"
+                        style={{ backgroundColor: hex }}
+                      />
+                    ))
+                  ) : (
+                    <span className="text-sm text-neutral-500">
+                      No color data
+                    </span>
+                  )}
                 </div>
               </div>
             </motion.div>
