@@ -1,8 +1,5 @@
 // project/src/services/printify.ts
 
-/**
- * Mirror of Printify’s API Product model.
- */
 interface PrintifyImage { src: string; is_default: boolean }
 interface PrintifyVariant { id: number; price: number; is_enabled: boolean }
 interface PrintifyProduct {
@@ -14,30 +11,21 @@ interface PrintifyProduct {
   tags: string[]
 }
 
-/** What our UI needs. */
 export interface Product {
   id: string
   name: string
   description: string
-  price: number
+  price: number      // in dollars now
   image: string
   category: string
 }
 
 const NETLIFY_FN = '/.netlify/functions'
 
-/** Strip all HTML tags and collapse whitespace */
 function stripHtml(html: string): string {
-  return html
-    .replace(/<\/?[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return html.replace(/<\/?[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-/**
- * Fetch via our Netlify function and map to Product[],
- * using the lowest enabled variant price.
- */
 export async function fetchPrintifyProducts(): Promise<Product[]> {
   const res = await fetch(`${NETLIFY_FN}/printify-products`)
   if (!res.ok) {
@@ -47,32 +35,25 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
   const { data } = (await res.json()) as { data: PrintifyProduct[] }
 
   return data.map((p) => {
-    // pick the default image
-    const defaultImage = p.images.find((i) => i.is_default) || p.images[0]
-    const category     = p.tags?.[0]?.toLowerCase() || 'classics'
+    const defaultImage  = p.images.find(i => i.is_default) || p.images[0]
+    const category      = p.tags?.[0]?.toLowerCase() || 'classics'
+    const description   = p.description ? stripHtml(p.description) : ''
 
-    // strip HTML description
-    const description = p.description
-      ? stripHtml(p.description)
-      : 'Vintage Bollywood T-Shirt'
-
-    // gather prices from enabled variants (or all if none enabled)
-    const relevantVariants = p.variants.filter((v) => v.is_enabled)
-    const pricesToConsider = (relevantVariants.length > 0
-      ? relevantVariants
+    // pick enabled variants (or all), convert cents→dollars
+    const variantsToUse = p.variants.filter(v => v.is_enabled).length > 0
+      ? p.variants.filter(v => v.is_enabled)
       : p.variants
-    ).map((v) => Number(v.price))
 
-    // pick the lowest
-    const price = pricesToConsider.length > 0
-      ? Math.min(...pricesToConsider)
+    const dollarPrices = variantsToUse.map(v => Number(v.price) / 100)
+    const lowestPrice  = dollarPrices.length > 0
+      ? Math.min(...dollarPrices)
       : 29.99
 
     return {
       id:          p.id,
       name:        p.title,
       description,
-      price,
+      price:       lowestPrice,
       image:       defaultImage.src,
       category,
     }
