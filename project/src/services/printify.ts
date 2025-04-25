@@ -69,6 +69,8 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
       ? stripHtml(p.description)
       : 'Vintage Bollywood T-Shirt';
 
+    console.log('📝 stripped description:', description);
+
     // coerce to number, fallback if missing
     const price = activeVariant
       ? parseFloat(activeVariant.price.toString())
