@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Filter } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
-import { fetchProducts } from '../data/products';
+import { fetchProducts } from '../data/products.ts';
 import { Product } from '../types';
 
 const ProductPage = () => {

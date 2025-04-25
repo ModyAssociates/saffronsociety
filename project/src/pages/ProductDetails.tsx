@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingBag, Info } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
 import { Product } from '../types';
-import { fetchProducts } from '../data/products.tsx';
+import { fetchProducts } from '../data/products.ts';
 
 const ProductDetails = () => {
   const { id } = useParams();
