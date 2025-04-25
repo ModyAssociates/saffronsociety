@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Trash2, Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/CartContext.tsx';
 
 interface CartDropdownProps {
   isOpen: boolean;

@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
-import { useCart } from '../../context/CartContext';
-import { Product } from '../../services/printify';
-import { getFeaturedProducts } from '../../data/products';
+import { useCart } from '../../context/CartContext.tsx';
+import { Product } from '../../services/printify.ts';
+import { getFeaturedProducts } from '../../data/products.tsx';
 import { useEffect, useState } from 'react';
 
 const FeaturedProducts = () => {

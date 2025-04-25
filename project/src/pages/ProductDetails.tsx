@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingBag, Info } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/CartContext.tsx';
 import { Product } from '../types';
-import { fetchProducts } from '../data/products';
+import { fetchProducts } from '../data/products.tsx';
 
 const ProductDetails = () => {
   const { id } = useParams();

@@ -1,7 +1,7 @@
 // src/data/products.ts
 
-import type { Product } from '../services/printify';
-import { fetchPrintifyProducts } from '../services/printify';
+import type { Product } from '../services/printify.ts';
+import { fetchPrintifyProducts } from '../services/printify.ts';
 
 /**
  * Load all products (from Printify).

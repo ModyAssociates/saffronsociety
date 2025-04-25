@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X } from 'lucide-react';
-import { useCart } from '../../context/CartContext';
-import CartDropdown from '../cart/CartDropdown';
+import { useCart } from '../../context/CartContext.tsx';
+import CartDropdown from '../cart/CartDropdown.tsx';
 import logo from '../../assets/logo_big.png'
 
 
