@@ -102,11 +102,14 @@ const FeaturedProducts = () => {
 
 export default FeaturedProducts
 
-/**
- * Stub — replace with real logic from your Printify variant metadata.
- */
-function getColorSwatches(product: Product): string[] {
-  // e.g. product.tags might include "white", "black", etc.
-  // or you could enhance your fetch logic to return an array of color hexes.
-  return ['#FFFFFF', '#000000', '#FF5A5F', '#004E92'] 
-}
+{/* COLOR SWATCHES */}
+<div className="flex items-center space-x-2 mt-3">
+  {product.colors.map((hex) => (
+    <span
+      key={hex}
+      className="w-6 h-6 rounded-full border border-gray-300"
+      style={{ backgroundColor: hex }}
+    />
+  ))}
+</div>
+
