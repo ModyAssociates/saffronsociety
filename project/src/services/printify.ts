@@ -1,133 +1,97 @@
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
-import { useCart } from '../../context/CartContext';
-import { Product } from '../../services/printify';       // ← import from services, not ../types
-import { getFeaturedProducts } from '../../data/products';
-import { useEffect, useState } from 'react';
+// project/src/services/printify.ts
 
-const FeaturedProducts = () => {
-  const { addToCart } = useCart();
-  const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+/**
+ * Mirror of Printify’s API models for a shop’s products.
+ */
+const API_URL = 'https://api.printify.com/v1'
+const PRINTIFY_API_TOKEN = process.env.PRINTIFY_API_TOKEN!
+const PRINTIFY_SHOP_ID   = process.env.PRINTIFY_SHOP_ID!
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const featured = await getFeaturedProducts();
-        console.log('🛍️ FeaturedProducts loaded:', featured);
-        setProducts(featured);
-      } catch (err) {
-        console.error('FeaturedProducts load error:', err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+interface PrintifyImage {
+  src: string
+  is_default: boolean
+}
 
-  if (loading) {
-    return (
-      <section className="py-16">
-        <div className="container-custom text-center">
-          <p>Loading products…</p>
-        </div>
-      </section>
-    );
+interface PrintifyVariant {
+  id: number
+  price: number    // price in cents
+  is_enabled: boolean
+  option1?: string // often color, if available
+}
+
+interface PrintifyProduct {
+  id: string
+  title: string
+  description: string
+  images: PrintifyImage[]
+  variants: PrintifyVariant[]
+  tags: string[]
+}
+
+/**
+ * The shape your UI expects.
+ */
+export interface Product {
+  id: string
+  name: string
+  description: string
+  price: number       // in dollars
+  image: string
+  category: string
+  colors: string[]    // hex codes for swatches
+}
+
+const headers = {
+  Authorization: `Bearer ${PRINTIFY_API_TOKEN}`,
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+}
+
+/** Strip HTML tags from the Printify description */
+function stripHtml(html: string): string {
+  return html.replace(/<\/?[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * Fetch products via Printify’s API and map to our UI model.
+ */
+export async function fetchPrintifyProducts(): Promise<Product[]> {
+  // 1) Fetch the shop’s product list
+  const listRes = await fetch(
+    `${API_URL}/shops/${PRINTIFY_SHOP_ID}/products.json`,
+    { headers }
+  )
+  if (!listRes.ok) {
+    const err = await listRes.text()
+    throw new Error(`Printify list error: ${listRes.status} ${err}`)
   }
+  const { data } = (await listRes.json()) as { data: PrintifyProduct[] }
 
-  if (products.length === 0) {
-    return (
-      <section className="py-16">
-        <div className="container-custom text-center">
-          <p>No products to show</p>
-        </div>
-      </section>
-    );
-  }
+  return data.map((p) => {
+    // pick a default image
+    const defaultImg = p.images.find((i) => i.is_default) || p.images[0]
+    const category   = p.tags[0]?.toLowerCase() || 'classics'
+    const desc       = p.description
+      ? stripHtml(p.description)
+      : 'Vintage Bollywood T-Shirt'
 
-  return (
-    <section className="py-16">
-      <div className="container-custom">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="font-playfair text-4xl text-maroon mb-8 text-center"
-        >
-          New Arrivals
-        </motion.h2>
+    // collect all enabled-variant prices (in dollars)
+    const enabled = p.variants.filter((v) => v.is_enabled)
+    const prices  = (enabled.length ? enabled : p.variants)
+      .map((v) => Number(v.price) / 100)
+    const price   = prices.length ? Math.min(...prices) : 29.99
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.map((product, i) => (
-            <motion.div
-              key={product.id}
-              className="cursor-pointer"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-            >
-              {/* IMAGE CARD */}
-              <div
-                onClick={() => navigate(`/products/${product.id}`)}
-                className="relative overflow-hidden rounded-xl shadow-lg group"
-              >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart(product);
-                  }}
-                  className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-label={`Add ${product.name} to cart`}
-                >
-                  <ShoppingBag className="w-5 h-5 text-gray-700" />
-                </button>
-              </div>
+    // stub colors array (you can replace this with real variant.option1→hex mapping)
+    const colors: string[] = []
 
-              {/* INFO */}
-              <div className="mt-4">
-                <h3
-                  onClick={() => navigate(`/products/${product.id}`)}
-                  className="font-medium text-gray-800 hover:text-maroon transition-colors"
-                >
-                  {product.name}
-                </h3>
-                <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-xl font-semibold text-maroon">
-                    ${product.price.toFixed(2)}
-                  </span>
-                </div>
-
-                {/* COLOR SWATCHES */}
-                <div className="flex items-center space-x-2 mt-3">
-                  {product.colors.length > 0 ? (
-                    product.colors.map((hex) => (
-                      <span
-                        key={hex}
-                        className="w-6 h-6 rounded-full border border-gray-300"
-                        style={{ backgroundColor: hex }}
-                      />
-                    ))
-                  ) : (
-                    <span className="text-sm text-neutral-500">
-                      No color data
-                    </span>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-export default FeaturedProducts;
+    return {
+      id:          p.id,
+      name:        p.title,
+      description: desc,
+      price,
+      image:       defaultImg.src,
+      category,
+      colors,
+    }
+  })
+}
