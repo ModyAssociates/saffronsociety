@@ -5,16 +5,24 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // whenever code does "import { parse } from 'cookie'",
-      // use the ESM-ready cookie-es package instead
+      // swap out cookie → cookie-es so react-router’s parse import works
       cookie: 'cookie-es',
     },
   },
-  server: {
-    // (your existing proxy, if you have one)
-    // proxy: { '/.netlify/functions': { /* ... */ } }
+
+  // ← Add this block to force-include Emotion’s CJS helper
+  optimizeDeps: {
+    include: ['@emotion/is-prop-valid'],
   },
-  build: {
-    // no special build tweaks needed here
+
+  server: {
+    // if you proxy your Netlify functions, you can enable this:
+    // proxy: {
+    //   '/.netlify/functions': {
+    //     target: 'http://localhost:8888',
+    //     changeOrigin: true,
+    //     rewrite: (path) => path.replace(/^\/.netlify\/functions/, '/.netlify/functions'),
+    //   },
+    // },
   },
 });
