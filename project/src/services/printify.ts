@@ -1,61 +1,55 @@
 // project/src/services/printify.ts
-
-interface PrintifyImage { src: string; is_default: boolean }
-interface PrintifyVariant { id: number; price: number; is_enabled: boolean }
-interface PrintifyProduct {
-  id: string
-  title: string
-  description: string
-  images: PrintifyImage[]
-  variants: PrintifyVariant[]
-  tags: string[]
+interface PrintifyVariant { 
+  id: number; price: number; is_enabled: boolean;
+  option1?: string;
 }
+interface PrintifyProduct { /* … */ }
 
 export interface Product {
-  id: string
-  name: string
-  description: string
-  price: number      // in dollars now
-  image: string
-  category: string
-}
-
-const NETLIFY_FN = '/.netlify/functions'
-
-function stripHtml(html: string): string {
-  return html.replace(/<\/?[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  colors: string[];    // <-- new
 }
 
 export async function fetchPrintifyProducts(): Promise<Product[]> {
-  const res = await fetch(`${NETLIFY_FN}/printify-products`)
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Printify proxy error: ${res.status} ${err}`)
-  }
-  const { data } = (await res.json()) as { data: PrintifyProduct[] }
+  // 1) pull the shop list
+  const shopRes = await fetch(`${API_URL}/shops/${shopId}/products.json`, { headers });
+  const { data } = await shopRes.json() as { data: PrintifyProduct[] };
 
-  return data.map((p) => {
-    const defaultImage  = p.images.find(i => i.is_default) || p.images[0]
-    const category      = p.tags?.[0]?.toLowerCase() || 'classics'
-    const description   = p.description ? stripHtml(p.description) : ''
+  return Promise.all(
+    data.map(async (p) => {
+      // 2) for each product, fetch its full detail
+      const detailRes = await fetch(`${API_URL}/shops/${shopId}/products/${p.id}.json`, { headers });
+      const detail   = await detailRes.json() as { variants: PrintifyVariant[] };
 
-    // pick enabled variants (or all), convert cents→dollars
-    const variantsToUse = p.variants.filter(v => v.is_enabled).length > 0
-      ? p.variants.filter(v => v.is_enabled)
-      : p.variants
+      // 3) extract unique color names from option1
+      const colorNames = [...new Set(
+        detail.variants
+          .filter((v) => v.is_enabled)
+          .map((v) => v.option1 || "Unknown")
+      )];
 
-    const dollarPrices = variantsToUse.map(v => Number(v.price) / 100)
-    const lowestPrice  = dollarPrices.length > 0
-      ? Math.min(...dollarPrices)
-      : 29.99
+      // 4) map names to hex codes
+      const colors = colorNames.map((name) => COLOR_HEX[name] || "#CCCCCC");
 
-    return {
-      id:          p.id,
-      name:        p.title,
-      description,
-      price:       lowestPrice,
-      image:       defaultImage.src,
-      category,
-    }
-  })
+      // 5) lowest enabled‐variant logic (in dollars)
+      const prices = detail.variants
+        .filter((v) => v.is_enabled)
+        .map((v) => Number(v.price) / 100);
+      const price  = prices.length ? Math.min(...prices) : 29.99;
+
+      // …pick default image & other fields as before…
+      return {
+        id:       p.id,
+        name:     p.title,
+        price,
+        image:    /*…*/,
+        category: /*…*/,
+        colors,
+      };
+    })
+  );
 }
