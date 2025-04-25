@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext.tsx';
 import { Product } from '../../services/printify.ts';
-import { getFeaturedProducts } from '../../data/products.tsx';
+import { getFeaturedProducts } from '../../data/products.ts';
 import { useEffect, useState } from 'react';
 
 const FeaturedProducts = () => {
