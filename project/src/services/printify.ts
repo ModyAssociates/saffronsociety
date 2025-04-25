@@ -8,10 +8,11 @@ interface PrintifyProduct { /* … */ }
 export interface Product {
   id: string;
   name: string;
+  description: string;
   price: number;
   image: string;
   category: string;
-  colors: string[];    // <-- new
+  colors: string[];   // ← make sure this line is present
 }
 
 export async function fetchPrintifyProducts(): Promise<Product[]> {
