@@ -1,20 +1,20 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import commonjs from '@rollup/plugin-commonjs'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    // transform CJS modules (like cookie) to ESM
-    commonjs({
-      include: ['node_modules/**']
-    })
-  ],
+  plugins: [react()],
   resolve: {
-    // ensure Rollup sees the cookie entry-point
-    extensions: ['.js', '.mjs', '.ts', '.json']
+    alias: {
+      // whenever code does "import { parse } from 'cookie'",
+      // use the ESM-ready cookie-es package instead
+      cookie: 'cookie-es',
+    },
+  },
+  server: {
+    // (your existing proxy, if you have one)
+    // proxy: { '/.netlify/functions': { /* ... */ } }
   },
   build: {
-    /* your existing production build settings */
-  }
-})
+    // no special build tweaks needed here
+  },
+});
