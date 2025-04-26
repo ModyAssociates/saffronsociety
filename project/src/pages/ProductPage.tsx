@@ -1,24 +1,23 @@
+// project/src/pages/ProductPage.tsx
+
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ShoppingBag, Filter } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { fetchProducts } from '../data/products'
 import { Product } from '../services/printify'
 
 const ProductPage = () => {
-  const { addToCart } = useCart()
   const navigate = useNavigate()
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const { addToCart } = useCart()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     ;(async () => {
       try {
-        const all = await fetchProducts()
-        setProducts(all)
+        const data = await fetchProducts()
+        setProducts(data)
       } catch (err) {
         console.error(err)
       } finally {
@@ -27,38 +26,32 @@ const ProductPage = () => {
     })()
   }, [])
 
-  const categories = ['all', ...new Set(products.map((p) => p.category))]
-  const filtered =
-    selectedCategory && selectedCategory !== 'all'
-      ? products.filter((p) => p.category === selectedCategory)
-      : products
-
   if (loading) {
     return <p className="text-center py-16">Loading…</p>
   }
-  if (filtered.length === 0) {
-    return (
-      <p className="text-center py-16">No products found in this category</p>
-    )
+  if (products.length === 0) {
+    return <p className="text-center py-16">No products found.</p>
   }
 
   return (
     <section className="py-8 md:py-12">
       <div className="container-custom">
-        {/* Header & filters omitted for brevity */}
+        <h1 className="font-playfair text-4xl text-maroon mb-6 text-center">
+          Bollywood Collection
+        </h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filtered.map((product, i) => (
+          {products.map((product, i) => (
             <motion.div
               key={product.id}
+              className="group cursor-pointer"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: i * 0.05 }}
-              className="group cursor-pointer"
               onClick={() => navigate(`/products/${product.id}`)}
             >
-              {/* MAIN IMAGE */}
-              <div className="relative overflow-hidden rounded-xl shadow-lg">
+              {/* IMAGE */}
+              <div className="relative overflow-hidden rounded-lg bg-white shadow">
                 <img
                   src={product.images[0]}
                   alt={product.name}
@@ -69,51 +62,31 @@ const ProductPage = () => {
                     e.stopPropagation()
                     addToCart(product)
                   }}
-                  className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-label={`Add ${product.name} to cart`}
+                  className="absolute bottom-3 right-3 bg-white p-2 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Add to cart"
                 >
-                  <ShoppingBag className="w-5 h-5 text-gray-700" />
+                  🛒
                 </button>
               </div>
 
-              {/* THUMBNAILS */}
-              <div className="flex space-x-2 mt-3 overflow-x-auto">
-                {product.images.map((src, idx) => (
-                  <img
-                    key={idx}
-                    src={src}
-                    alt={`${product.name} ${idx + 1}`}
-                    className="w-16 h-16 object-cover rounded-md border"
-                  />
-                ))}
-              </div>
+              {/* PRICE */}
+              <p className="mt-4 text-center text-xl font-semibold text-maroon">
+                ${product.price.toFixed(2)}
+              </p>
 
-              {/* INFO */}
-              <div className="mt-4">
-                <h2 className="font-medium text-neutral-800 mb-1 group-hover:text-maroon transition-colors">
-                  {product.name}
-                </h2>
-                <p className="text-maroon font-semibold">
-                  ${product.price.toFixed(2)}
-                </p>
-
-                {/* COLORS */}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {product.colors.length > 0 ? (
-                    product.colors.map((c) => (
-                      <span
-                        key={c}
-                        className="px-2 py-1 text-xs bg-neutral-100 rounded"
-                      >
-                        {c}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-gray-500">
-                      No color data
-                    </span>
-                  )}
-                </div>
+              {/* COLORS */}
+              <div className="mt-2 flex justify-center space-x-2">
+                {product.colors.length > 0 ? (
+                  product.colors.map((hex) => (
+                    <span
+                      key={hex}
+                      className="w-5 h-5 rounded-full border"
+                      style={{ backgroundColor: hex }}
+                    />
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-400">No colors</span>
+                )}
               </div>
             </motion.div>
           ))}
