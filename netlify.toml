@@ -1,16 +1,26 @@
+# netlify.toml
+
 [build]
-  base      = "project"              # <— tell Netlify to cd into project/
-  command   = "npm run build"        # now this runs inside project/
-  publish   = "dist"                 # Vite’s default output in project/dist
-  functions = "../netlify/functions" # functions live one level up
+  # work inside the "project" folder
+  base      = "project"
+  # this runs "npm run build" inside project/, which should invoke "vite build"
+  command   = "npm run build"
+  # final static bundle lives in project/dist
+  publish   = "dist"
+  # functions folder is one level up (repo-root)/netlify/functions
+  functions = "../netlify/functions"
 
 [dev]
+  # likewise in dev, cd into project/
   base       = "project"
+  # run your Vite dev server
   command    = "npm run dev"
+  # Vite's dev server listens on 5173 by default
   targetPort = 5173
-  port       = 8888
+  # same functions folder
   functions  = "../netlify/functions"
 
+# Single‐page app fallback
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
