@@ -3,31 +3,20 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-
   resolve: {
     alias: {
-      // ensures react-router's `parse` comes from cookie-es
+      // Redirect Emotion’s CJS call to an ESM module on esm.sh:
+      '@emotion/is-prop-valid': 'https://esm.sh/is-prop-valid',
+      // And still handle cookie → cookie-es
       cookie: 'cookie-es',
     },
   },
-
-  // Dev-only pre-bundle
   optimizeDeps: {
-    include: ['@emotion/is-prop-valid'],
+    include: ['https://esm.sh/is-prop-valid'],
   },
-
-  // Build-time CommonJS handling
   build: {
     commonjsOptions: {
-      include: [
-        /node_modules/,                 // default
-        /node_modules\/@emotion\/.*/,   // <-- add this
-      ],
+      include: [/node_modules/, /@emotion\/is-prop-valid/],
     },
-  },
-
-  server: {
-    // your existing proxy can go here if you have one
-    // proxy: { '/.netlify/functions': 'http://localhost:8888' }
   },
 })
