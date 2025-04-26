@@ -4,12 +4,14 @@
   "description": "T-Shirt Ecommerce Store",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "netlify-cli": "^20.0.4"
+    "netlify-cli": "^20.1.1"
   }
 }
