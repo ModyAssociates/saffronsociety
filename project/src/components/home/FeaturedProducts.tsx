@@ -1,49 +1,35 @@
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
-import { useCart } from '../../context/CartContext';
-import { Product } from '../../services/printify';       // ← import from services, not ../types
-import { getFeaturedProducts } from '../../data/products';
-import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+import { ShoppingBag } from 'lucide-react'
+import { useCart } from '../../context/CartContext'
+import { Product } from '../../services/printify'
+import { getFeaturedProducts } from '../../data/products'
+import { useEffect, useState } from 'react'
 
 const FeaturedProducts = () => {
-  const { addToCart } = useCart();
-  const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart()
+  const navigate = useNavigate()
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
-        const featured = await getFeaturedProducts();
-        console.log('🛍️ FeaturedProducts loaded:', featured);
-        setProducts(featured);
+        const featured = await getFeaturedProducts()
+        setProducts(featured)
       } catch (err) {
-        console.error('FeaturedProducts load error:', err);
+        console.error(err)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    })();
-  }, []);
+    })()
+  }, [])
 
   if (loading) {
-    return (
-      <section className="py-16">
-        <div className="container-custom text-center">
-          <p>Loading products…</p>
-        </div>
-      </section>
-    );
+    return <p className="text-center py-16">Loading…</p>
   }
-
   if (products.length === 0) {
-    return (
-      <section className="py-16">
-        <div className="container-custom text-center">
-          <p>No products to show</p>
-        </div>
-      </section>
-    );
+    return <p className="text-center py-16">No products to show</p>
   }
 
   return (
@@ -69,26 +55,38 @@ const FeaturedProducts = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.1 }}
             >
-              {/* IMAGE CARD */}
+              {/* MAIN IMAGE */}
               <div
                 onClick={() => navigate(`/products/${product.id}`)}
                 className="relative overflow-hidden rounded-xl shadow-lg group"
               >
                 <img
-                  src={product.image}
+                  src={product.images[0]}
                   alt={product.name}
                   className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart(product);
+                    e.stopPropagation()
+                    addToCart(product)
                   }}
                   className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label={`Add ${product.name} to cart`}
                 >
                   <ShoppingBag className="w-5 h-5 text-gray-700" />
                 </button>
+              </div>
+
+              {/* THUMBNAILS */}
+              <div className="flex space-x-2 mt-3 overflow-x-auto">
+                {product.images.map((src, idx) => (
+                  <img
+                    key={idx}
+                    src={src}
+                    alt={`${product.name} ${idx + 1}`}
+                    className="w-16 h-16 object-cover rounded-md border"
+                  />
+                ))}
               </div>
 
               {/* INFO */}
@@ -99,24 +97,23 @@ const FeaturedProducts = () => {
                 >
                   {product.name}
                 </h3>
-                <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-xl font-semibold text-maroon">
-                    ${product.price.toFixed(2)}
-                  </span>
-                </div>
+                <p className="text-maroon font-semibold mt-1">
+                  ${product.price.toFixed(2)}
+                </p>
 
-                {/* COLOR SWATCHES */}
-                <div className="flex items-center space-x-2 mt-3">
+                {/* COLORS */}
+                <div className="flex flex-wrap gap-2 mt-2">
                   {product.colors.length > 0 ? (
-                    product.colors.map((hex) => (
+                    product.colors.map((c) => (
                       <span
-                        key={hex}
-                        className="w-6 h-6 rounded-full border border-gray-300"
-                        style={{ backgroundColor: hex }}
-                      />
+                        key={c}
+                        className="px-2 py-1 text-xs bg-neutral-100 rounded"
+                      >
+                        {c}
+                      </span>
                     ))
                   ) : (
-                    <span className="text-sm text-neutral-500">
+                    <span className="text-sm text-gray-500">
                       No color data
                     </span>
                   )}
@@ -127,7 +124,7 @@ const FeaturedProducts = () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default FeaturedProducts;
+export default FeaturedProducts
