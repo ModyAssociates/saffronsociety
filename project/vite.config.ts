@@ -1,28 +1,33 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+
   resolve: {
     alias: {
-      // swap out cookie → cookie-es so react-router’s parse import works
+      // ensures react-router's `parse` comes from cookie-es
       cookie: 'cookie-es',
     },
   },
 
-  // ← Add this block to force-include Emotion’s CJS helper
+  // Dev-only pre-bundle
   optimizeDeps: {
     include: ['@emotion/is-prop-valid'],
   },
 
-  server: {
-    // if you proxy your Netlify functions, you can enable this:
-    // proxy: {
-    //   '/.netlify/functions': {
-    //     target: 'http://localhost:8888',
-    //     changeOrigin: true,
-    //     rewrite: (path) => path.replace(/^\/.netlify\/functions/, '/.netlify/functions'),
-    //   },
-    // },
+  // Build-time CommonJS handling
+  build: {
+    commonjsOptions: {
+      include: [
+        /node_modules/,                 // default
+        /node_modules\/@emotion\/.*/,   // <-- add this
+      ],
+    },
   },
-});
+
+  server: {
+    // your existing proxy can go here if you have one
+    // proxy: { '/.netlify/functions': 'http://localhost:8888' }
+  },
+})
