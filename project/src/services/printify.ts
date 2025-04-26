@@ -1,98 +1,78 @@
 // project/src/services/printify.ts
 
-/**
- * Printify “Shop Products” shape (what your Netlify fn returns).
- */
+const NETLIFY_FN = '/.netlify/functions'
+
 interface PrintifyImage {
-  src: string;
-  is_default: boolean;
+  src: string
+  is_default: boolean
 }
 
 interface PrintifyVariant {
-  id: number;
-  price: number;       // in *cents*
-  is_enabled: boolean;
-  option1?: string;    // (e.g. “Color”)
+  id: number
+  price: number       // in cents
+  is_enabled: boolean
+  option1?: string    // typically the “Color” name
 }
 
 interface PrintifyProduct {
-  id: string;
-  title: string;
-  description: string;
-  images: PrintifyImage[];
-  variants: PrintifyVariant[];
-  tags: string[];
+  id: string
+  title: string
+  description: string
+  images: PrintifyImage[]
+  variants: PrintifyVariant[]
+  tags: string[]
 }
 
-/**
- * The shape your React UI expects.
- */
 export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;       // in dollars
-  image: string;
-  category: string;
-  colors: string[];    // hex codes for swatches
+  id: string
+  name: string
+  description: string
+  price: number        // in dollars
+  images: string[]     // ← now an array
+  category: string
+  colors: string[]     // ← now an array of names
 }
 
-const NETLIFY_FN = '/.netlify/functions';
-
-/** Strip out any HTML tags from Printify descriptions */
 function stripHtml(html: string): string {
-  return html
-    .replace(/<\/?[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return html.replace(/<\/?[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-/**
- * Fetches your Printify products by calling your
- * Netlify Function at /.netlify/functions/printify-products
- */
 export async function fetchPrintifyProducts(): Promise<Product[]> {
-  console.log('[printify.ts] calling Netlify fn…');
-  const res = await fetch(`${NETLIFY_FN}/printify-products`);
-  console.log('[printify.ts] fn status:', res.status);
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '<no body>');
-    console.error('[printify.ts] fn error body:', errText);
-    throw new Error(`Printify proxy returned ${res.status}`);
-  }
-
-  const { data } = (await res.json()) as { data: PrintifyProduct[] };
+  const res = await fetch(`${NETLIFY_FN}/printify-products`)
+  if (!res.ok) throw new Error(`Proxy error ${res.status}`)
+  const { data } = (await res.json()) as { data: PrintifyProduct[] }
 
   return data.map((p) => {
-    // 1) Default image & metadata
-    const defaultImg  = p.images.find((i) => i.is_default) || p.images[0];
-    const category    = p.tags[0]?.toLowerCase() || 'classics';
-    const description = p.description
-      ? stripHtml(p.description)
-      : '';
+    // 1) All image URLs
+    const allImages = p.images.map((i) => i.src)
 
-    // 2) Enabled variants (or fall back to all)
-    const enabled = p.variants.filter((v) => v.is_enabled);
-    const variantsToUse = enabled.length ? enabled : p.variants;
+    // 2) Default metadata
+    const category    = p.tags[0]?.toLowerCase() || 'classics'
+    const description = p.description ? stripHtml(p.description) : ''
 
-    // 3) Cents → dollars & pick the lowest
-    const pricesInDollars = variantsToUse.map((v) => v.price / 100);
-    const lowestPrice     = pricesInDollars.length
-      ? Math.min(...pricesInDollars)
-      : 0;
+    // 3) Price logic (enabled variants → dollars → lowest)
+    const enabled = p.variants.filter((v) => v.is_enabled)
+    const variantsToUse = enabled.length ? enabled : p.variants
+    const dollarPrices = variantsToUse.map((v) => v.price / 100)
+    const price        = dollarPrices.length ? Math.min(...dollarPrices) : 0
 
-    // 4) Stub out colors for now (you can replace with real option1→hex mapping later)
-    const colors: string[] = [];
+    // 4) Color names from option1, unique
+    const colorNames = Array.from(
+      new Set(
+        variantsToUse
+          .map((v) => v.option1?.trim() || '')
+          .filter((n) => n)
+      )
+    )
 
     return {
       id:          p.id,
       name:        p.title,
       description,
-      price:       lowestPrice,
-      image:       defaultImg?.src ?? '',
+      price,
+      images:      allImages,
       category,
-      colors,
-    };
-  });
+      colors:      colorNames,
+    }
+  })
 }
