@@ -1,24 +1,8 @@
 // project/src/services/printify.ts
+const NETLIFY_FN = '/.netlify/functions'
 
-/**
- * Mirror of Printify’s API models for a shop’s products.
- */
-const API_URL = 'https://api.printify.com/v1'
-const PRINTIFY_API_TOKEN = process.env.PRINTIFY_API_TOKEN!
-const PRINTIFY_SHOP_ID   = process.env.PRINTIFY_SHOP_ID!
-
-interface PrintifyImage {
-  src: string
-  is_default: boolean
-}
-
-interface PrintifyVariant {
-  id: number
-  price: number    // price in cents
-  is_enabled: boolean
-  option1?: string // often color, if available
-}
-
+interface PrintifyImage { src: string; is_default: boolean }
+interface PrintifyVariant { id: number; price: number; is_enabled: boolean; option1?: string }
 interface PrintifyProduct {
   id: string
   title: string
@@ -28,70 +12,54 @@ interface PrintifyProduct {
   tags: string[]
 }
 
-/**
- * The shape your UI expects.
- */
 export interface Product {
   id: string
   name: string
   description: string
-  price: number       // in dollars
+  price: number      // now in dollars
   image: string
   category: string
-  colors: string[]    // hex codes for swatches
+  colors: string[]   // hex codes
 }
 
-const headers = {
-  Authorization: `Bearer ${PRINTIFY_API_TOKEN}`,
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-}
-
-/** Strip HTML tags from the Printify description */
 function stripHtml(html: string): string {
   return html.replace(/<\/?[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-/**
- * Fetch products via Printify’s API and map to our UI model.
- */
 export async function fetchPrintifyProducts(): Promise<Product[]> {
-  // 1) Fetch the shop’s product list
-  const listRes = await fetch(
-    `${API_URL}/shops/${PRINTIFY_SHOP_ID}/products.json`,
-    { headers }
-  )
-  if (!listRes.ok) {
-    const err = await listRes.text()
-    throw new Error(`Printify list error: ${listRes.status} ${err}`)
+  console.log('[printify.ts] calling netlify fn…')
+  const res = await fetch(`${NETLIFY_FN}/printify-products`)
+  console.log('[printify.ts] fn status:', res.status)
+  if (!res.ok) {
+    const err = await res.text().catch(() => '<no body>')
+    console.error('[printify.ts] fn error body:', err)
+    throw new Error(`Printify proxy returned ${res.status}`)
   }
-  const { data } = (await listRes.json()) as { data: PrintifyProduct[] }
+
+  const { data } = (await res.json()) as { data: PrintifyProduct[] }
 
   return data.map((p) => {
-    // pick a default image
-    const defaultImg = p.images.find((i) => i.is_default) || p.images[0]
-    const category   = p.tags[0]?.toLowerCase() || 'classics'
-    const desc       = p.description
-      ? stripHtml(p.description)
-      : 'Vintage Bollywood T-Shirt'
+    // pick default image
+    const defaultImg  = p.images.find((i) => i.is_default) || p.images[0]
+    const category    = p.tags[0]?.toLowerCase() || 'classics'
+    const description = p.description ? stripHtml(p.description) : ''
 
-    // collect all enabled-variant prices (in dollars)
-    const enabled = p.variants.filter((v) => v.is_enabled)
-    const prices  = (enabled.length ? enabled : p.variants)
-      .map((v) => Number(v.price) / 100)
-    const price   = prices.length ? Math.min(...prices) : 29.99
+    // choose enabled variants (or all if none enabled)
+    const enabledVariants = p.variants.filter((v) => v.is_enabled)
+    const variantsToUse   = enabledVariants.length ? enabledVariants : p.variants
 
-    // stub colors array (you can replace this with real variant.option1→hex mapping)
-    const colors: string[] = []
+    // convert cents→dollars and pick lowest
+    const dollarPrices = variantsToUse.map((v) => v.price / 100)
+    const lowestPrice  = dollarPrices.length ? Math.min(...dollarPrices) : 0
 
     return {
       id:          p.id,
       name:        p.title,
-      description: desc,
-      price,
+      description,
+      price:       lowestPrice,
       image:       defaultImg.src,
       category,
-      colors,
+      colors:      [],  // fill this in later from variant.option1→hex
     }
   })
 }
