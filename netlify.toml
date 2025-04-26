@@ -1,26 +1,24 @@
 # netlify.toml
-
 [build]
-  # work inside the "project" folder
   base      = "project"
-  # this runs "npm run build" inside project/, which should invoke "vite build"
   command   = "npm run build"
-  # final static bundle lives in project/dist
   publish   = "dist"
-  # functions folder is one level up (repo-root)/netlify/functions
-  functions = "../netlify/functions"
+  functions = "netlify/functions"
+
+[build.environment]
+  PRINTIFY_API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzN2Q0YmQzMDM1ZmUxMWU5YTgwM2FiN2VlYjNjY2M5NyIsImp0aSI6IjI3ODAzZTIwZmJkZjQ5OTBlMTE4OWFhYjVlZDQ3NjQxZDJjNWUyYzI0ODRjNzVkOWRkMzM2MjIyZGEzYzQ1ZTVjYjcyMTY2NjJjMGViMTUxIiwiaWF0IjoxNzQ1NzAyNTYzLjA3Nzk5NiwibmJmIjoxNzQ1NzAyNTYzLjA3Nzk5OCwiZXhwIjoxNzc3MjM4NTYzLjA2NjcwNywic3ViIjoiOTg4MzgxNSIsInNjb3BlcyI6WyJzaG9wcy5tYW5hZ2UiLCJzaG9wcy5yZWFkIiwiY2F0YWxvZy5yZWFkIiwib3JkZXJzLnJlYWQiLCJvcmRlcnMud3JpdGUiLCJwcm9kdWN0cy5yZWFkIiwicHJvZHVjdHMud3JpdGUiLCJ3ZWJob29rcy5yZWFkIiwid2ViaG9va3Mud3JpdGUiLCJ1cGxvYWRzLnJlYWQiLCJ1cGxvYWRzLndyaXRlIiwicHJpbnRfcHJvdmlkZXJzLnJlYWQiLCJ1c2VyLmluZm8iXX0.jIaqK4aY31rm2csjmVPVEWPanztfP4KT0V75l1qZmVYKzSiF6wTVqbWvhioemzoYB-E-x0VwKlhqCaT-FxdOxTFAsEz1jEVFnO2E8DBwP9xzZfM0f7HsDii88nC1EW_PF_QyOMc1cfn2GTNFtZ863PEE6OTjk0gdp8zd-cb16rCC1GbdQTH5do4uF3pNptLHNn_aen2mlS8P8n_kL9at1UzglF1U6xMWNnQN1d11Ro2MYKQCVazea4LFnR0UAOZbkgC6gVJ9fxzjL4pvjWjTyBzoDpTRHIyYszHb6w7d17DXDmhDCNV59NTDuKzk8LNi_fl8jN_I7RrRYPY3yrxSu1IrysE4-0gpwH4YDLIRZGb7HYMuJSCffXd5tfxr95_VcVltWUJUrWjM93eNNNf_sIb2y1DvAWDINSZy_A_oVepMshmzzBBQpCmtajgmNOU7Q8XZ2RZ9Fkq-B8X2EHahsubNdPY0P01WRO7oCNy8ofITQCydLqk4gJf-toXu11SiXX4sbTpRF0rj7dsWYKLwkMDCk_JeK166Ybmv4jFGvJAh0e2JvzDaTZoQ6oORmvWkQQqCnuEAHMUG6T1GKKA02DXoTLvJSUn1v4OiupohQbH9ZPXRs4TNO0CnI4a_uWiofGFZy0fZ2q38dDnWoFOFLiTk-gYfKsIzntJr52Dpn_Y"
+  PRINTIFY_SHOP_ID   = "22019146"
 
 [dev]
-  # likewise in dev, cd into project/
   base       = "project"
-  # run your Vite dev server
   command    = "npm run dev"
-  # Vite's dev server listens on 5173 by default
   targetPort = 5173
-  # same functions folder
-  functions  = "../netlify/functions"
+  functions  = "netlify/functions"
 
-# Single‐page app fallback
+[dev.environment]
+  PRINTIFY_API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzN2Q0YmQzMDM1ZmUxMWU5YTgwM2FiN2VlYjNjY2M5NyIsImp0aSI6IjI3ODAzZTIwZmJkZjQ5OTBlMTE4OWFhYjVlZDQ3NjQxZDJjNWUyYzI0ODRjNzVkOWRkMzM2MjIyZGEzYzQ1ZTVjYjcyMTY2NjJjMGViMTUxIiwiaWF0IjoxNzQ1NzAyNTYzLjA3Nzk5NiwibmJmIjoxNzQ1NzAyNTYzLjA3Nzk5OCwiZXhwIjoxNzc3MjM4NTYzLjA2NjcwNywic3ViIjoiOTg4MzgxNSIsInNjb3BlcyI6WyJzaG9wcy5tYW5hZ2UiLCJzaG9wcy5yZWFkIiwiY2F0YWxvZy5yZWFkIiwib3JkZXJzLnJlYWQiLCJvcmRlcnMud3JpdGUiLCJwcm9kdWN0cy5yZWFkIiwicHJvZHVjdHMud3JpdGUiLCJ3ZWJob29rcy5yZWFkIiwid2ViaG9va3Mud3JpdGUiLCJ1cGxvYWRzLnJlYWQiLCJ1cGxvYWRzLndyaXRlIiwicHJpbnRfcHJvdmlkZXJzLnJlYWQiLCJ1c2VyLmluZm8iXX0.jIaqK4aY31rm2csjmVPVEWPanztfP4KT0V75l1qZmVYKzSiF6wTVqbWvhioemzoYB-E-x0VwKlhqCaT-FxdOxTFAsEz1jEVFnO2E8DBwP9xzZfM0f7HsDii88nC1EW_PF_QyOMc1cfn2GTNFtZ863PEE6OTjk0gdp8zd-cb16rCC1GbdQTH5do4uF3pNptLHNn_aen2mlS8P8n_kL9at1UzglF1U6xMWNnQN1d11Ro2MYKQCVazea4LFnR0UAOZbkgC6gVJ9fxzjL4pvjWjTyBzoDpTRHIyYszHb6w7d17DXDmhDCNV59NTDuKzk8LNi_fl8jN_I7RrRYPY3yrxSu1IrysE4-0gpwH4YDLIRZGb7HYMuJSCffXd5tfxr95_VcVltWUJUrWjM93eNNNf_sIb2y1DvAWDINSZy_A_oVepMshmzzBBQpCmtajgmNOU7Q8XZ2RZ9Fkq-B8X2EHahsubNdPY0P01WRO7oCNy8ofITQCydLqk4gJf-toXu11SiXX4sbTpRF0rj7dsWYKLwkMDCk_JeK166Ybmv4jFGvJAh0e2JvzDaTZoQ6oORmvWkQQqCnuEAHMUG6T1GKKA02DXoTLvJSUn1v4OiupohQbH9ZPXRs4TNO0CnI4a_uWiofGFZy0fZ2q38dDnWoFOFLiTk-gYfKsIzntJr52Dpn_Y"
+  PRINTIFY_SHOP_ID   = "22019146"
+
 [[redirects]]
   from   = "/*"
   to     = "/index.html"

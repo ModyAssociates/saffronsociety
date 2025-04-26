@@ -8,5 +8,8 @@
     "start": "npm --prefix project run preview"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "netlify-cli": "^20.1.1"
+  }
 }
