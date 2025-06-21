@@ -6,9 +6,9 @@ import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import { fetchProducts } from '../data/products'
 import type { Product } from '../services/printify'
-import type { CartItem } from '../types/cart' // <-- Import CartItem from shared types
+import type { CartItem } from '../types/cart'
 
-const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'] // stub; swap if dynamic
+const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL']
 
 const ProductDetails = () => {
   const { id } = useParams()
@@ -46,69 +46,65 @@ const ProductDetails = () => {
   }
 
   return (
-    <div className="container-custom py-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* LEFT: Thumbnails + Main Image */}
-      <div className="flex">
-        <div className="flex flex-col space-y-2 overflow-y-auto pr-2">
+    <div className="container-custom py-16 flex flex-col lg:flex-row gap-12">
+      {/* LEFT: Main Image and Thumbnails */}
+      <div className="flex flex-col items-center w-full lg:w-1/2">
+        <div className="w-full max-w-md aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center mb-4">
+          <motion.img
+            src={mainImage}
+            alt={product.name}
+            className="object-cover w-full h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+        <div className="flex flex-row gap-2 mt-2">
           {product.images?.map((src, i) => (
             <img
               key={i}
               src={src}
               alt={`${product.name} ${i + 1}`}
-              className={`w-20 h-20 object-cover rounded cursor-pointer border-2 ${
+              className={`w-16 h-16 object-cover rounded cursor-pointer border-2 ${
                 mainImage === src ? 'border-maroon' : 'border-gray-300'
               }`}
               onClick={() => setMainImage(src)}
             />
           ))}
         </div>
-        {mainImage && (
-          <motion.img
-            src={mainImage}
-            alt={product.name}
-            className="flex-1 object-cover rounded-lg shadow-xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          />
-        )}
+        {/* Color Swatches below image */}
+        <div className="flex items-center space-x-1 mt-6 min-h-[28px]">
+          {product.colors?.slice(0, 5).map((hex) => (
+            <span
+              key={hex}
+              className={`w-7 h-7 rounded-full border-2 cursor-pointer ${
+                selectedColor === hex ? 'border-maroon' : 'border-gray-300'
+              }`}
+              style={{ backgroundColor: hex }}
+              title={hex}
+              onClick={() => setSelectedColor(hex)}
+            />
+          ))}
+          {product.colors && product.colors.length > 5 && (
+            <span className="ml-1 text-xs text-neutral-600 font-semibold">
+              +{product.colors.length - 5}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* RIGHT: Details */}
-      <div className="space-y-6">
-        {/* Name & Price */}
-        <h1 className="font-playfair text-3xl text-maroon">
+      <div className="flex-1 flex flex-col justify-center space-y-6">
+        {/* Name */}
+        <h1 className="font-playfair text-3xl text-maroon text-left">
           {product.name}
         </h1>
-        <p className="text-2xl font-semibold">
+        {/* Price */}
+        <p className="text-2xl font-bold text-neutral-900 text-left">
           {typeof product.price === 'number'
             ? `$${product.price.toFixed(2)}`
             : product.price}
         </p>
-
-        {/* Color Selector */}
-        <div>
-          <h3 className="font-medium mb-2">Color</h3>
-          <div className="flex items-center space-x-3">
-            {product.colors && product.colors.length > 0 ? (
-              product.colors.map((hex) => (
-                <button
-                  key={hex}
-                  className={`w-6 h-6 rounded-full border-2 ${
-                    selectedColor === hex
-                      ? 'border-maroon'
-                      : 'border-gray-300'
-                  }`}
-                  style={{ backgroundColor: hex }}
-                  onClick={() => setSelectedColor(hex)}
-                  aria-label={`Select color ${hex}`}
-                />
-              ))
-            ) : (
-              <span className="text-gray-500">No colors available</span>
-            )}
-          </div>
-        </div>
 
         {/* Size Selector */}
         <div>

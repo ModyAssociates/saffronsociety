@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Product } from '../types';
+import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import type { CartItem } from '../types/cart'; // <-- Use shared CartItem type
 
 interface CartState {

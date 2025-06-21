@@ -38,6 +38,24 @@ function stripHtml(html: string): string {
   return html.replace(/<\/?[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
+const COLOR_NAME_TO_HEX: Record<string, string> = {
+  Black: "#222222",
+  White: "#FFFFFF",
+  Navy: "#1A2E5F",
+  Red: "#E3342F",
+  Blue: "#3490DC",
+  Green: "#38A169",
+  Gray: "#A0AEC0",
+  Grey: "#A0AEC0",
+  Pink: "#ED64A6",
+  Yellow: "#ECC94B",
+  Orange: "#F6AD55",
+  Purple: "#9F7AEA",
+  Brown: "#8D5524",
+  // Add more as needed
+};
+
+
 export async function fetchPrintifyProducts(): Promise<Product[]> {
   const res = await fetch(`${NETLIFY_FN}/printify-products`)
   if (!res.ok) throw new Error(`Proxy error ${res.status}`)
@@ -69,7 +87,12 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
           .map((v) => v.option1?.trim() || '')
           .filter((n) => n)
       )
-    )
+    );
+
+    // Map color names to hex codes for swatches
+    const colorSwatches = colorNames.map(
+      (name) => COLOR_NAME_TO_HEX[name] || "#CCCCCC" // fallback gray
+    );
 
     return {
       id:          p.id,
@@ -78,7 +101,7 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
       price,
       images:      allImages,
       category,
-      colors:      colorNames,
+      colors:      colorSwatches, // <-- now hex codes for swatches
       // Do NOT include selectedColor here
     }
   })

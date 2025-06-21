@@ -13,6 +13,7 @@ export async function fetchProducts(): Promise<Product[]> {
       console.error('[products.ts] fetchProducts() error: products is not an array', products)
       return []
     }
+    // You can sort or filter products here if needed
     return products
   } catch (error) {
     console.error('[products.ts] fetchProducts() error:', error)
@@ -23,8 +24,10 @@ export async function fetchProducts(): Promise<Product[]> {
 
 /**
  * Return the first N as “featured.”
+ * Optionally, you can sort or filter for featured/sale items here.
  */
 export async function getFeaturedProducts(n = 4): Promise<Product[]> {
   const all = await fetchProducts()
+  // You can sort or filter here if needed for your homepage display
   return all.slice(0, n)
 }
