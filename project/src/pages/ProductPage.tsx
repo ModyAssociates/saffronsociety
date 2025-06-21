@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import type { CartItem } from '../types/cart'
 import { useCart } from '../context/CartContext'
 import { fetchProducts } from '../data/products'
 import { Product } from '../services/printify'
+
+const DEFAULT_SIZE = 'M'
 
 const ProductPage = () => {
   const navigate = useNavigate()
@@ -17,9 +20,10 @@ const ProductPage = () => {
     ;(async () => {
       try {
         const data = await fetchProducts()
-        setProducts(data)
+        setProducts(Array.isArray(data) ? data : [])
       } catch (err) {
         console.error(err)
+        setProducts([])
       } finally {
         setLoading(false)
       }
@@ -53,14 +57,20 @@ const ProductPage = () => {
               {/* IMAGE */}
               <div className="relative overflow-hidden rounded-lg bg-white shadow">
                 <img
-                  src={product.images[0]}
+                  src={product.images?.[0] || '/placeholder.png'}
                   alt={product.name}
                   className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    addToCart(product)
+                    const cartItem: CartItem = {
+                      ...product,
+                      selectedColor: product.colors?.[0] || '',
+                      selectedSize: DEFAULT_SIZE,
+                      quantity: 1,
+                    }
+                    addToCart(cartItem)
                   }}
                   className="absolute bottom-3 right-3 bg-white p-2 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Add to cart"
@@ -71,12 +81,14 @@ const ProductPage = () => {
 
               {/* PRICE */}
               <p className="mt-4 text-center text-xl font-semibold text-maroon">
-                ${product.price.toFixed(2)}
+                {typeof product.price === 'number'
+                  ? `$${product.price.toFixed(2)}`
+                  : product.price}
               </p>
 
               {/* COLORS */}
               <div className="mt-2 flex justify-center space-x-2">
-                {product.colors.length > 0 ? (
+                {product.colors && product.colors.length > 0 ? (
                   product.colors.map((hex) => (
                     <span
                       key={hex}

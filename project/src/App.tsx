@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { CartProvider } from './context/CartContext.tsx';
-import Header from './components/layout/Header.tsx';
-import Footer from './components/layout/Footer.tsx';
-import HomePage from './pages/HomePage.tsx';
-import ProductPage from './pages/ProductPage.tsx';
-import ProductDetails from './pages/ProductDetails.tsx';
-import CartPage from './pages/CartPage.tsx';
-import CheckoutPage from './pages/CheckoutPage.tsx';
-import ShirtQuality from './pages/ShirtQuality.tsx';
+import { CartProvider } from './context/CartContext';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+import HomePage from './pages/HomePage';
+import ProductPage from './pages/ProductPage';
+import ProductDetails from './pages/ProductDetails';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import ShirtQuality from './pages/ShirtQuality';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);

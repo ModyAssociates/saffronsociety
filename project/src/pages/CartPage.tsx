@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
+import type { CartItem } from '../types/cart';
 
 const CartPage = () => {
   const { state, removeFromCart, updateQuantity } = useCart();
@@ -67,9 +68,9 @@ const CartPage = () => {
             </div>
 
             {/* Cart Items */}
-            {state.items.map((item) => (
+            {state.items.map((item: CartItem) => (
               <motion.div
-                key={item.id}
+                key={item.id + '-' + (item.selectedColor || '') + '-' + (item.selectedSize || '')}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -78,19 +79,29 @@ const CartPage = () => {
                 {/* Product */}
                 <div className="col-span-6 flex items-center">
                   <img
-                    src={item.image}
+                    src={item.images?.[0] || '/placeholder.png'}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded-md"
                   />
                   <div className="ml-4">
                     <h3 className="font-medium text-neutral-800">{item.name}</h3>
                     <p className="text-neutral-600 text-sm mt-1">{item.description.substring(0, 40)}...</p>
-                    
+                    {/* Show color and size if available */}
+                    <div className="text-xs text-neutral-500 mt-1">
+                      {item.selectedColor && (
+                        <span>
+                          Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {item.selectedColor}
+                        </span>
+                      )}
+                      {item.selectedSize && (
+                        <span className="ml-2">Size: {item.selectedSize}</span>
+                      )}
+                    </div>
                     {/* Mobile Price */}
                     <div className="flex justify-between items-center mt-2 md:hidden">
                       <span className="text-neutral-800 font-medium">{formatPrice(item.price)}</span>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item.id, item.selectedColor, item.selectedSize)}
                         className="text-neutral-400 hover:text-error-500 transition-colors p-1"
                         aria-label={`Remove ${item.name} from cart`}
                       >
@@ -109,7 +120,7 @@ const CartPage = () => {
                 <div className="col-span-2">
                   <div className="flex items-center justify-center border border-neutral-200 rounded-md max-w-32 mx-auto">
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedColor, item.selectedSize)}
                       className="text-neutral-600 hover:text-maroon transition-colors p-2"
                       aria-label="Decrease quantity"
                     >
@@ -117,7 +128,7 @@ const CartPage = () => {
                     </button>
                     <span className="mx-3">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedColor, item.selectedSize)}
                       className="text-neutral-600 hover:text-maroon transition-colors p-2"
                       aria-label="Increase quantity"
                     >
@@ -131,10 +142,9 @@ const CartPage = () => {
                   <span className="font-semibold text-maroon">
                     {formatPrice(item.price * item.quantity)}
                   </span>
-                  
                   {/* Delete Button (Desktop) */}
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => removeFromCart(item.id, item.selectedColor, item.selectedSize)}
                     className="hidden md:block text-neutral-400 hover:text-error-500 transition-colors ml-4"
                     aria-label={`Remove ${item.name} from cart`}
                   >

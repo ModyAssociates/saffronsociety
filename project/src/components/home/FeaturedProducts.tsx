@@ -3,9 +3,12 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
+import type { CartItem } from '../../types/cart'
 import { Product } from '../../services/printify'
 import { getFeaturedProducts } from '../../data/products'
 import { useEffect, useState } from 'react'
+
+const DEFAULT_SIZE = 'M'
 
 const FeaturedProducts = () => {
   const navigate = useNavigate()
@@ -63,7 +66,13 @@ const FeaturedProducts = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    addToCart(product)
+                    const cartItem: CartItem = {
+                      ...product,
+                      selectedColor: product.colors?.[0] || '',
+                      selectedSize: DEFAULT_SIZE,
+                      quantity: 1,
+                    }
+                    addToCart(cartItem)
                   }}
                   className="absolute bottom-3 right-3 bg-white p-2 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Add to cart"
@@ -79,7 +88,7 @@ const FeaturedProducts = () => {
 
               {/* COLORS */}
               <div className="mt-2 flex justify-center space-x-2">
-                {product.colors.length > 0 ? (
+                {product.colors && product.colors.length > 0 ? (
                   product.colors.map((hex) => (
                     <span
                       key={hex}

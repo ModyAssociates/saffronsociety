@@ -27,10 +27,11 @@ export interface Product {
   id: string
   name: string
   description: string
-  price: number        // in dollars
-  images: string[]     // ← now an array
+  price: number
+  images: string[]
   category: string
-  colors: string[]     // ← now an array of names
+  colors?: string[]
+  // Do NOT include selectedColor here; it should be in CartItem only
 }
 
 function stripHtml(html: string): string {
@@ -42,17 +43,22 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
   if (!res.ok) throw new Error(`Proxy error ${res.status}`)
   const { data } = (await res.json()) as { data: PrintifyProduct[] }
 
+  if (!Array.isArray(data)) {
+    console.error('[printify.ts] fetchPrintifyProducts: data is not an array', data)
+    return []
+  }
+
   return data.map((p) => {
     // 1) All image URLs
-    const allImages = p.images.map((i) => i.src)
+    const allImages = Array.isArray(p.images) ? p.images.map((i) => i.src) : []
 
     // 2) Default metadata
-    const category    = p.tags[0]?.toLowerCase() || 'classics'
+    const category    = Array.isArray(p.tags) && p.tags[0] ? p.tags[0].toLowerCase() : 'classics'
     const description = p.description ? stripHtml(p.description) : ''
 
     // 3) Price logic (enabled variants → dollars → lowest)
-    const enabled = p.variants.filter((v) => v.is_enabled)
-    const variantsToUse = enabled.length ? enabled : p.variants
+    const enabled = Array.isArray(p.variants) ? p.variants.filter((v) => v.is_enabled) : []
+    const variantsToUse = enabled.length ? enabled : (Array.isArray(p.variants) ? p.variants : [])
     const dollarPrices = variantsToUse.map((v) => v.price / 100)
     const price        = dollarPrices.length ? Math.min(...dollarPrices) : 0
 
@@ -73,6 +79,7 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
       images:      allImages,
       category,
       colors:      colorNames,
+      // Do NOT include selectedColor here
     }
   })
 }

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, CreditCard, CheckCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
+import type { CartItem } from '../types/cart';
 
 const CheckoutPage = () => {
   const { state, clearCart } = useCart();
@@ -20,7 +21,7 @@ const CheckoutPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    
+
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false);
@@ -244,6 +245,24 @@ const CheckoutPage = () => {
                   </div>
                 </div>
               </div>
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isProcessing}
+                className="btn-primary w-full text-center flex items-center justify-center mt-8"
+              >
+                {isProcessing ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  'Complete Purchase'
+                )}
+              </button>
             </form>
           </div>
 
@@ -255,17 +274,27 @@ const CheckoutPage = () => {
               </h2>
 
               <div className="max-h-60 overflow-y-auto mb-6 space-y-3">
-                {state.items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center py-2 border-b border-neutral-100">
+                {state.items.map((item: CartItem) => (
+                  <div key={item.id + '-' + (item.selectedColor || '') + '-' + (item.selectedSize || '')} className="flex justify-between items-center py-2 border-b border-neutral-100">
                     <div className="flex items-center">
                       <img
-                        src={item.image}
+                        src={item.images?.[0] || '/placeholder.png'}
                         alt={item.name}
                         className="w-12 h-12 object-cover rounded-md"
                       />
                       <div className="ml-3">
                         <p className="text-neutral-800 font-medium">{item.name}</p>
                         <p className="text-neutral-600 text-sm">Qty: {item.quantity}</p>
+                        <div className="text-xs text-neutral-500 mt-1">
+                          {item.selectedColor && (
+                            <span>
+                              Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {item.selectedColor}
+                            </span>
+                          )}
+                          {item.selectedSize && (
+                            <span className="ml-2">Size: {item.selectedSize}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <span className="text-neutral-800 font-medium">
@@ -289,25 +318,6 @@ const CheckoutPage = () => {
                   <span className="font-bold text-xl text-maroon">{formatPrice(state.totalAmount)}</span>
                 </div>
               </div>
-
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                disabled={isProcessing}
-                className="btn-primary w-full text-center flex items-center justify-center"
-              >
-                {isProcessing ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  'Complete Purchase'
-                )}
-              </button>
             </div>
           </div>
         </div>

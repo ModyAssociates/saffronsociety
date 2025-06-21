@@ -5,9 +5,10 @@ import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import { fetchProducts } from '../data/products'
-import { Product } from '../services/printify'
+import type { Product } from '../services/printify'
+import type { CartItem } from '../types/cart' // <-- Import CartItem from shared types
 
-const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL']  // stub; swap if dynamic
+const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'] // stub; swap if dynamic
 
 const ProductDetails = () => {
   const { id } = useParams()
@@ -23,11 +24,11 @@ const ProductDetails = () => {
     ;(async () => {
       try {
         const all = await fetchProducts()
-        const found = all.find((p) => p.id === id) || null
+        const found = all.find((p) => String(p.id) === String(id)) || null
         if (found) {
           setProduct(found)
-          setMainImage(found.images[0])
-          setSelectedColor(found.colors[0] || '')
+          setMainImage(found.images?.[0] || '')
+          setSelectedColor(found.colors?.[0] || '')
         }
       } catch (err) {
         console.error(err)
@@ -49,24 +50,28 @@ const ProductDetails = () => {
       {/* LEFT: Thumbnails + Main Image */}
       <div className="flex">
         <div className="flex flex-col space-y-2 overflow-y-auto pr-2">
-          {product.images.map((src, i) => (
+          {product.images?.map((src, i) => (
             <img
               key={i}
               src={src}
               alt={`${product.name} ${i + 1}`}
-              className="w-20 h-20 object-cover rounded cursor-pointer border-2"
+              className={`w-20 h-20 object-cover rounded cursor-pointer border-2 ${
+                mainImage === src ? 'border-maroon' : 'border-gray-300'
+              }`}
               onClick={() => setMainImage(src)}
             />
           ))}
         </div>
-        <motion.img
-          src={mainImage}
-          alt={product.name}
-          className="flex-1 object-cover rounded-lg shadow-xl"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        />
+        {mainImage && (
+          <motion.img
+            src={mainImage}
+            alt={product.name}
+            className="flex-1 object-cover rounded-lg shadow-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        )}
       </div>
 
       {/* RIGHT: Details */}
@@ -75,13 +80,17 @@ const ProductDetails = () => {
         <h1 className="font-playfair text-3xl text-maroon">
           {product.name}
         </h1>
-        <p className="text-2xl font-semibold">${product.price.toFixed(2)}</p>
+        <p className="text-2xl font-semibold">
+          {typeof product.price === 'number'
+            ? `$${product.price.toFixed(2)}`
+            : product.price}
+        </p>
 
         {/* Color Selector */}
         <div>
           <h3 className="font-medium mb-2">Color</h3>
           <div className="flex items-center space-x-3">
-            {product.colors.length > 0 ? (
+            {product.colors && product.colors.length > 0 ? (
               product.colors.map((hex) => (
                 <button
                   key={hex}
@@ -92,6 +101,7 @@ const ProductDetails = () => {
                   }`}
                   style={{ backgroundColor: hex }}
                   onClick={() => setSelectedColor(hex)}
+                  aria-label={`Select color ${hex}`}
                 />
               ))
             ) : (
@@ -125,9 +135,8 @@ const ProductDetails = () => {
           <div className="flex items-center border rounded">
             <button
               className="px-3 py-1"
-              onClick={() =>
-                setQuantity((q) => Math.max(1, q - 1))
-              }
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              aria-label="Decrease quantity"
             >
               –
             </button>
@@ -135,21 +144,22 @@ const ProductDetails = () => {
             <button
               className="px-3 py-1"
               onClick={() => setQuantity((q) => q + 1)}
+              aria-label="Increase quantity"
             >
               +
             </button>
           </div>
           <button
             className="bg-maroon text-white px-6 py-2 rounded hover:bg-maroon/90 transition"
-            onClick={() =>
-              addToCart({
+            onClick={() => {
+              const cartItem: CartItem = {
                 ...product,
-                // if your cart context accepts size & color, pass them here:
-                // selectedColor,
-                // selectedSize,
-                // quantity,
-              })
-            }
+                selectedColor,
+                selectedSize,
+                quantity,
+              }
+              addToCart(cartItem)
+            }}
           >
             Add to Cart
           </button>

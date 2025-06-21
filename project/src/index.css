@@ -8,8 +8,10 @@
   --off-white: #e8e8e8;
 }
 
+/* Use Tailwind's arbitrary value for custom colors in @apply */
 body {
-  @apply bg-off-white font-open-sans text-neutral-800 min-h-screen;
+  @apply font-open-sans text-neutral-800 min-h-screen;
+  background-color: var(--off-white);
   line-height: 1.5;
 }
 
@@ -22,12 +24,21 @@ button, .button {
   @apply transition-all duration-300;
 }
 
+/* Use Tailwind's arbitrary value for custom colors in @apply */
 .btn-primary {
-  @apply bg-saffron hover:bg-opacity-90 text-neutral-900 font-open-sans font-semibold px-6 py-3 rounded-md inline-block;
+  @apply text-neutral-900 font-open-sans font-semibold px-6 py-3 rounded-md inline-block;
+  background-color: var(--saffron);
+}
+.btn-primary:hover {
+  background-color: #e6a92e; /* slightly darker saffron for hover */
 }
 
 .btn-secondary {
-  @apply bg-maroon hover:bg-opacity-90 text-white font-open-sans font-semibold px-6 py-3 rounded-md inline-block;
+  @apply text-white font-open-sans font-semibold px-6 py-3 rounded-md inline-block;
+  background-color: var(--maroon);
+}
+.btn-secondary:hover {
+  background-color: #691b3d; /* slightly darker maroon for hover */
 }
 
 .container-custom {

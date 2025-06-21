@@ -1,12 +1,12 @@
-import Hero from '../components/home/Hero.tsx';
-import FeaturedProducts from '../components/home/FeaturedProducts.tsx';
+import Hero from '../components/home/Hero';
+import FeaturedProducts from '../components/home/FeaturedProducts';
 
 const HomePage = () => {
   return (
-    <div>
+    <main>
       <Hero />
       <FeaturedProducts />
-    </div>
+    </main>
   );
 };
 
