@@ -62,14 +62,17 @@ const ProductCard = ({ product, index, isBestSeller = false }: ProductCardProps)
 
         {/* Color Swatches */}
         <div className="flex items-center space-x-1 mb-3 flex-wrap gap-1">
-          {product.colors?.slice(0, 8).map((hex, index) => (
-            <div
-              key={index}
-              className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
-              style={{ backgroundColor: hex }}
-              title={`Color ${index + 1}`}
-            />
-          ))}
+          {(() => {
+            console.log(`ProductCard for ${product.name} received colors:`, product.colors);
+            return product.colors?.slice(0, 8).map((hex, index) => (
+              <div
+                key={index}
+                className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
+                style={{ backgroundColor: hex }}
+                title={`Color ${index + 1}: ${hex}`}
+              />
+            ));
+          })()}
           {product.colors && product.colors.length > 8 && (
             <span className="text-xs text-gray-600 font-medium ml-1">
               +{product.colors.length - 8}

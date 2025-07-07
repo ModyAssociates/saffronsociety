@@ -28,6 +28,31 @@ exports.handler = async function (event) {
         return { statusCode: res.status, headers: { 'Access-Control-Allow-Origin': '*' }, body: err };
       }
       const payload = await res.json();
+      
+      // Process each product to add colors
+      if (payload.data) {
+        payload.data = payload.data.map(product => {
+          // Extract unique colors from the options
+          const colorOption = product.options?.find(opt => opt.type === 'color');
+          const colors = [];
+          
+          if (colorOption && colorOption.values) {
+            // Get unique colors from color option values
+            colorOption.values.forEach(colorValue => {
+              if (colorValue.colors && colorValue.colors[0]) {
+                colors.push(colorValue.colors[0]);
+              }
+            });
+          }
+          
+          // Add colors array to product
+          return {
+            ...product,
+            colors: colors
+          };
+        });
+      }
+      
       return {
         statusCode: 200,
         headers: { 'Access-Control-Allow-Origin': '*' },
