@@ -1,9 +1,11 @@
 // project/src/components/product/ProductCard.tsx
+// Ensured proxy usage.
 
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import type { CartItem } from '../../types/cart'
+import placeholderImg from '../../assets/logo_big.png'
 import { Product } from '../../services/printify'
 
 interface ProductCardProps {
@@ -18,6 +20,15 @@ const ProductCard = ({ product, index, isBestSeller = false }: ProductCardProps)
   const navigate = useNavigate()
   const { addToCart } = useCart()
 
+  // Image with proxy
+  const rawImg = product.images?.[0]
+  
+  let imageUrl = placeholderImg
+  
+  if (rawImg) {
+    imageUrl = `/api/proxy-image?url=${encodeURIComponent(rawImg)}`;
+  }
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation()
     const cartItem: CartItem = {
@@ -27,6 +38,11 @@ const ProductCard = ({ product, index, isBestSeller = false }: ProductCardProps)
       quantity: 1,
     }
     addToCart(cartItem)
+  }
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.warn(`Image failed to load for ${product.name}:`, imageUrl)
+    e.currentTarget.src = placeholderImg
   }
 
   return (
@@ -47,32 +63,28 @@ const ProductCard = ({ product, index, isBestSeller = false }: ProductCardProps)
       {/* Product Image */}
       <div className="w-full aspect-[4/5] bg-gray-100 overflow-hidden flex-shrink-0">
         <img
-          src={product.images?.[0] || '/placeholder.png'}
+          src={imageUrl}
           alt={product.name}
+          onError={handleImageError}
           className="object-contain object-center w-full h-full hover:scale-105 transition-transform duration-300"
         />
       </div>
 
       {/* Product Details */}
       <div className="p-4 flex flex-col flex-grow">
-        {/* Product Name */}
         <h3 className="text-sm font-medium text-gray-900 mb-3 line-clamp-2 leading-tight flex-grow-0">
           {product.name}
         </h3>
 
-        {/* Color Swatches */}
         <div className="flex items-center space-x-1 mb-3 flex-wrap gap-1">
-          {(() => {
-            console.log(`ProductCard for ${product.name} received colors:`, product.colors);
-            return product.colors?.slice(0, 8).map((hex, index) => (
-              <div
-                key={index}
-                className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
-                style={{ backgroundColor: hex }}
-                title={`Color ${index + 1}: ${hex}`}
-              />
-            ));
-          })()}
+          {product.colors?.slice(0, 8).map((hex, index) => (
+            <div
+              key={index}
+              className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
+              style={{ backgroundColor: hex }}
+              title={`Color ${index + 1}: ${hex}`}
+            />
+          ))}
           {product.colors && product.colors.length > 8 && (
             <span className="text-xs text-gray-600 font-medium ml-1">
               +{product.colors.length - 8}
@@ -80,14 +92,12 @@ const ProductCard = ({ product, index, isBestSeller = false }: ProductCardProps)
           )}
         </div>
 
-        {/* Price */}
         <div className="mt-auto">
           <span className="text-lg font-bold text-gray-900">
             CA${product.price.toFixed(2)}
           </span>
         </div>
 
-        {/* Add to Cart Button - Hidden by default, shown on hover */}
         <button
           onClick={handleAddToCart}
           className="absolute bottom-3 right-3 bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-50"

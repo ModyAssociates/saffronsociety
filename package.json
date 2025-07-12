@@ -24,7 +24,8 @@
   "dependencies": {
     "@fontsource/open-sans": "^5.2.6",
     "@fontsource/playfair-display": "^5.2.6",
-    "framer-motion": "^12.18.1",
+    "framer-motion": "^12.23.3",
+    "node-fetch": "^3.3.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2"
