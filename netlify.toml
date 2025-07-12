@@ -1,11 +1,10 @@
 # netlify.toml
-# Fixed functions path for base dir and updated Node to 20 for engine compatibility.
 
 [build]
   base = "project"
   command = "npm run build"
   publish = "dist"
-  functions = "../netlify/functions"  # Points to root/netlify/functions from base "project"
+  functions = "netlify/functions"  # Adjust if functions are at root/netlify/functions
 
 [dev]
   base = "project"
@@ -13,7 +12,7 @@
   targetPort = 3000
   port = 8888
   publish = "dist"
-  functions = "../netlify/functions"  # Same for dev
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/api/proxy-image/*"
@@ -26,4 +25,4 @@
   status = 200
 
 [build.environment]
-  NODE_VERSION = "20"  # Updated to resolve engine warnings
+  NODE_VERSION = "20"
