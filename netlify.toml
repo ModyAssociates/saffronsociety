@@ -4,7 +4,7 @@
   base = "project"
   command = "npm run build"
   publish = "dist"
-  functions = "../netlify/functions"  # Adjust if functions are at root/netlify/functions
+  functions = "netlify/functions"  # Adjust if functions are at root/netlify/functions
 
 [dev]
   base = "project"
@@ -12,7 +12,7 @@
   targetPort = 3000
   port = 8888
   publish = "dist"
-  functions = "../netlify/functions"
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/api/proxy-image/*"
