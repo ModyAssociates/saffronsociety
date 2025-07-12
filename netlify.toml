@@ -1,11 +1,11 @@
 # netlify.toml
-# Fixed functions path (removed ../ for root execution). Proxy redirect handles query params.
+# Fixed functions path for base dir and updated Node to 20 for engine compatibility.
 
 [build]
   base = "project"
   command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"  # Changed to correct relative path from root
+  functions = "../netlify/functions"  # Points to root/netlify/functions from base "project"
 
 [dev]
   base = "project"
@@ -13,7 +13,7 @@
   targetPort = 3000
   port = 8888
   publish = "dist"
-  functions = "netlify/functions"  # Changed to correct relative path from root
+  functions = "../netlify/functions"  # Same for dev
 
 [[redirects]]
   from = "/api/proxy-image/*"
@@ -26,4 +26,4 @@
   status = 200
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"  # Updated to resolve engine warnings
