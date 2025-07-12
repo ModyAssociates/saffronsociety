@@ -1,11 +1,11 @@
 # netlify.toml
-# Updated proxy redirect to handle query params with /*.
+# Fixed functions path (removed ../ for root execution). Proxy redirect handles query params.
 
 [build]
   base = "project"
   command = "npm run build"
   publish = "dist"
-  functions = "../netlify/functions"
+  functions = "netlify/functions"  # Changed to correct relative path from root
 
 [dev]
   base = "project"
@@ -13,7 +13,7 @@
   targetPort = 3000
   port = 8888
   publish = "dist"
-  functions = "../netlify/functions"
+  functions = "netlify/functions"  # Changed to correct relative path from root
 
 [[redirects]]
   from = "/api/proxy-image/*"
