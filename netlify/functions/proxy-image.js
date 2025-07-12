@@ -1,7 +1,5 @@
 // netlify/functions/proxy-image.js
-// Added more logging for debugging 404 or fetch errors.
-
-const fetch = require('node-fetch');
+// Updated to use dynamic import for node-fetch ESM compatibility.
 
 exports.handler = async (event) => {
   console.log('Proxy function called with query:', event.queryStringParameters);
@@ -16,6 +14,7 @@ exports.handler = async (event) => {
   }
 
   try {
+    const { default: fetch } = await import('node-fetch');  // Dynamic import for ESM
     console.log('Fetching image from:', url);
     const response = await fetch(url);
     if (!response.ok) {
