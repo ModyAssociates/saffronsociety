@@ -40,8 +40,8 @@ const Contact = () => {
     {
       icon: Mail,
       title: 'Email',
-      content: 'hello@saffronsociety.store',
-      link: 'mailto:hello@saffronsociety.store'
+      content: 'support@saffronsociety.store',
+      link: 'mailto:support@saffronsociety.store'
     },
     {
       icon: MessageSquare,

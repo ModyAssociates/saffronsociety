@@ -80,7 +80,7 @@ const Footer = () => {
             <h3 className="font-playfair text-xl mb-4">Contact</h3>
             <ul className="space-y-2">
               <li className="text-white/80">
-                Email: hello@saffronsociety.com
+                Email: support@saffronsociety.com
               </li>
               <li className="text-white/80">
                 Ontario, Canada

@@ -1,186 +1,145 @@
 import { motion } from 'framer-motion'
-import { FileText, ShoppingBag, AlertCircle, Users, Ban, Scale } from 'lucide-react'
+import { Shield, Globe, AlertTriangle } from 'lucide-react'
 
 const TermsOfUse = () => {
-  const sections = [
-    {
-      icon: ShoppingBag,
-      title: 'Orders and Payment',
-      items: [
-        'All prices are in CAD and subject to change without notice',
-        'Payment is required at the time of purchase',
-        'We reserve the right to refuse or cancel orders',
-        'Order confirmation does not guarantee product availability',
-        'Shipping costs are calculated at checkout'
-      ]
-    },
-    {
-      icon: FileText,
-      title: 'Intellectual Property',
-      items: [
-        'All designs are protected by copyright and trademark laws',
-        'You may not reproduce, distribute, or create derivative works',
-        'User-generated content grants us a license to use for marketing',
-        'We respect intellectual property rights and respond to valid claims'
-      ]
-    },
-    {
-      icon: Users,
-      title: 'User Conduct',
-      items: [
-        'You must be 18 years or older to make purchases',
-        'Provide accurate and complete information',
-        'Do not use the site for illegal or unauthorized purposes',
-        'Do not interfere with site security or functionality',
-        'Respect other users and our community guidelines'
-      ]
-    },
-    {
-      icon: Ban,
-      title: 'Prohibited Activities',
-      items: [
-        'Attempting to hack or compromise our systems',
-        'Using automated tools to scrape or access our site',
-        'Impersonating others or providing false information',
-        'Posting harmful, offensive, or illegal content',
-        'Violating any applicable laws or regulations'
-      ]
-    }
-  ]
-
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
-        >
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Terms of Use</h1>
-          <p className="text-gray-600">Effective Date: {new Date().toLocaleDateString()}</p>
-        </motion.div>
+    <div className="container-custom py-16">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-3xl mx-auto"
+      >
+        <h1 className="font-playfair text-4xl font-bold text-maroon mb-8">
+          Terms of Use
+        </h1>
+        
+        <div className="prose prose-lg max-w-none text-neutral-700">
+          <p className="lead">
+            By accessing and using the Saffron Society website, you accept and agree to be bound by 
+            the terms and provision of this agreement.
+          </p>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="prose prose-gray max-w-none"
-        >
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-6 mb-8">
-            <p className="text-gray-800">
-              Welcome to Saffron Society. By using our website and services, you agree to these terms. 
-              Please read them carefully before making any purchase.
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Use of Website
+              </h2>
+            </div>
+            <p>
+              You may use our website for lawful purposes only. You agree not to use the website:
             </p>
+            <ul className="list-disc list-inside ml-4">
+              <li>In any way that violates any applicable federal, state, local, or international law</li>
+              <li>To transmit any unauthorized advertising or promotional material</li>
+              <li>To impersonate any person or entity</li>
+              <li>In any way that infringes upon the rights of others</li>
+            </ul>
+          </section>
+
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Intellectual Property
+              </h2>
+            </div>
+            <p>
+              The content on this website, including but not limited to text, graphics, images, logos, 
+              and software, is the property of Saffron Society and is protected by copyright and other 
+              intellectual property laws.
+            </p>
+          </section>
+
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Product Information
+              </h2>
+            </div>
+            <p>
+              We strive to provide accurate product descriptions and pricing. However, we do not warrant 
+              that product descriptions or other content is accurate, complete, reliable, current, or error-free.
+            </p>
+          </section>
+
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Orders and Payment
+              </h2>
+            </div>
+            <p>
+              By placing an order, you warrant that you are legally capable of entering into binding contracts. 
+              All orders are subject to acceptance by us. We reserve the right to refuse any order.
+            </p>
+          </section>
+
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Globe className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Third Party Links
+              </h2>
+            </div>
+            <p>
+              Our website may contain links to third-party websites. We have no control over the content 
+              and assume no responsibility for the content, privacy policies, or practices of any third-party websites.
+            </p>
+          </section>
+
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Limitations of Liability
+              </h2>
+            </div>
+            <p>
+              In no event shall Saffron Society, its directors, employees, partners, agents, suppliers, or 
+              affiliates be liable for any indirect, incidental, special, consequential, or punitive damages, 
+              including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
+            </p>
+          </section>
+
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Disclaimers
+              </h2>
+            </div>
+            <p>
+              The information on this website is provided on an "as is" basis. Saffron Society makes no 
+              representations or warranties of any kind, express or implied, as to the operation of this 
+              website or the information, content, materials, or products included on this website.
+            </p>
+          </section>
+
+          <section className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-6 h-6 text-orange-500" />
+              <h2 className="font-playfair text-2xl font-bold text-neutral-800 m-0">
+                Contact Information
+              </h2>
+            </div>
+            <p>
+              For questions about these Terms of Use, please contact us at:
+            </p>
+            <p className="ml-4">
+              Email: support@saffronsociety.com<br />
+              Address: Saffron Society, Ontario, CA
+            </p>
+          </section>
+
+          <div className="mt-12 pt-8 border-t border-neutral-200 text-sm text-neutral-600">
+            <p>Last updated: {new Date().toLocaleDateString()}</p>
           </div>
-
-          {sections.map((section, index) => (
-            <motion.section
-              key={section.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-              className="mb-10"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <section.icon className="w-6 h-6 text-blue-600" />
-                </div>
-                <h2 className="text-2xl font-semibold text-gray-900">{section.title}</h2>
-              </div>
-              <ul className="space-y-2 ml-11">
-                {section.items.map((item, i) => (
-                  <li key={i} className="text-gray-700 flex items-start">
-                    <span className="text-blue-500 mr-2">•</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.section>
-          ))}
-
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="mb-10"
-          >
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 flex items-center gap-2">
-              <Scale className="w-6 h-6 text-blue-600" />
-              Returns and Refunds
-            </h2>
-            <div className="ml-8 space-y-3 text-gray-700">
-              <p>• Returns accepted within 30 days of delivery for unworn items</p>
-              <p>• Items must be in original condition with tags attached</p>
-              <p>• Custom or personalized items cannot be returned</p>
-              <p>• Refunds processed within 5-10 business days</p>
-              <p>• Shipping costs are non-refundable</p>
-            </div>
-          </motion.section>
-
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mb-10"
-          >
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900">Limitation of Liability</h2>
-            <p className="text-gray-700">
-              To the fullest extent permitted by law, Saffron Society shall not be liable for any indirect, 
-              incidental, special, consequential, or punitive damages resulting from your use of our services. 
-              Our total liability shall not exceed the amount paid for the product in question.
-            </p>
-          </motion.section>
-
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="mb-10"
-          >
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900">Disclaimers</h2>
-            <div className="space-y-3 text-gray-700">
-              <p>• Products are provided "as is" without warranties of any kind</p>
-              <p>• Colors may vary slightly from screen to actual product</p>
-              <p>• We do not guarantee continuous or error-free service</p>
-              <p>• Product availability is subject to change</p>
-            </div>
-          </motion.section>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="mt-12 bg-gray-100 rounded-lg p-6"
-          >
-            <div className="flex items-start gap-3 mb-4">
-              <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Changes to Terms</h3>
-                <p className="text-gray-700">
-                  We reserve the right to update these terms at any time. Continued use of our services 
-                  after changes constitutes acceptance of the new terms.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.1 }}
-            className="mt-8 bg-blue-100 rounded-lg p-6"
-          >
-            <h2 className="text-xl font-semibold mb-3 text-gray-900">Questions?</h2>
-            <p className="text-gray-700">
-              If you have any questions about these terms, please contact us at:
-            </p>
-            <p className="text-gray-700 mt-2">
-              <strong>Email:</strong> legal@saffronsociety.store<br />
-              <strong>Address:</strong> Ontario, Canada
-            </p>
-          </motion.section>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   )
 }
