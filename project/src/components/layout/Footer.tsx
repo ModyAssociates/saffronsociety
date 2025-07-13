@@ -5,12 +5,12 @@ const Footer = () => {
   return (
     <footer className="bg-maroon text-white mt-16">
       <div className="container-custom py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* About */}
           <div className="md:col-span-2">
             <h3 className="font-playfair text-xl mb-4">Saffron Society</h3>
             <p className="mb-4 text-white/80">
-              Premium t-shirts featuring iconic vintage Bollywood movie designs.
+              Premium t-shirts featuring iconic vintage Bollywood designs.
               Each piece celebrates the rich cultural heritage of Indian cinema.
             </p>
             <div className="flex space-x-4">
@@ -53,6 +53,28 @@ const Footer = () => {
             </ul>
           </div>
 
+          {/* Legal */}
+          <div>
+            <h3 className="font-playfair text-xl mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/privacy" className="text-white/80 hover:text-saffron transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-white/80 hover:text-saffron transition-colors">
+                  Terms of Use
+                </Link>
+              </li>
+              <li>
+                <Link to="/shirt-quality" className="text-white/80 hover:text-saffron transition-colors">
+                  Quality Guarantee
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Contact */}
           <div>
             <h3 className="font-playfair text-xl mb-4">Contact</h3>
@@ -61,10 +83,7 @@ const Footer = () => {
                 Email: hello@saffronsociety.com
               </li>
               <li className="text-white/80">
-                Phone: +1 (555) 123-4567
-              </li>
-              <li className="text-white/80">
-                Mumbai, India
+                Ontario, Canada
               </li>
             </ul>
           </div>

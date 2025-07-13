@@ -9,7 +9,7 @@
 [dev]
   base = "project"
   command = "npm run dev"
-  targetPort = 5173  # Vite default port
+  targetPort = 3000  # Vite is running on 3000
   port = 8888
   publish = "dist"
   functions = "../netlify/functions"  # Correct path from project base

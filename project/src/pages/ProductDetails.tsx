@@ -1,9 +1,7 @@
-// project/src/pages/ProductDetails.tsx
-// Updated COLOR_NAME_TO_HEX with mappings from provided table for Printify HEX to Gildan names.
-
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ShoppingCart, Heart, ChevronLeft, ChevronDown, ChevronUp, Package, Shield } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { fetchProducts } from '../data/products'
 import type { Product } from '../services/printify'
@@ -11,6 +9,104 @@ import type { CartItem } from '../types/cart'
 import placeholderImg from '../assets/logo_big.png'
 
 const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
+
+// Utility function to decode HTML entities
+const decodeHTMLEntities = (text: string): string => {
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = text
+  return textarea.value
+}
+
+// Product information sections function
+const getProductInfoSections = (product: Product) => [
+  {
+    id: 'about',
+    title: 'About product',
+    content: {
+      designTitle: decodeHTMLEntities(product.name),
+      designDescription: decodeHTMLEntities(product.description || 'Express yourself with this unique design from Saffron Society. Our premium quality t-shirts combine comfort with style, perfect for making a statement wherever you go.'),
+      features: [
+        'Premium quality cotton construction',
+        'Vibrant, long-lasting print', 
+        'Comfortable unisex fit',
+        'Ethically sourced and produced'
+      ]
+    }
+  },
+  {
+    id: 'details',
+    title: 'Product details',
+    content: [
+      {
+        title: 'Without side seams',
+        description: 'Knitted in one piece using tubular knit, it reduces fabric waste and makes the garment more attractive'
+      },
+      {
+        title: 'Ribbed knit collar without seam',
+        description: 'Ribbed knit makes the collar highly elastic and helps retain its shape'
+      },
+      {
+        title: 'Shoulder tape',
+        description: 'Twill tape covers the shoulder seams to stabilize the back of the garment and prevent stretching'
+      },
+      {
+        title: 'Fiber composition',
+        description: 'Solid colors are 100% cotton; Heather colors are 50% cotton, 50% polyester (Sport Grey is 90% cotton, 10% polyester); Antique colors are 90% cotton, 10% polyester'
+      },
+      {
+        title: 'Bigger shirt size',
+        description: 'The t-shirt runs bigger than usual giving extra space for comfort'
+      },
+      {
+        title: 'Fabric',
+        description: 'Environmentally-friendly manufactured cotton that gives thicker vintage feel to the shirt. Long-lasting garment suitable for everyday use. The "Natural" color is made with unprocessed cotton, which results in small black flecks throughout the fabric'
+      },
+      {
+        title: 'Age restrictions',
+        description: 'For adults and teens'
+      },
+      {
+        title: 'Other compliance information',
+        description: 'Meets the formaldehyde, phthalates, lead and flammability level requirements.'
+      }
+    ]
+  },
+  {
+    id: 'care',
+    title: 'Care instructions',
+    content: [
+      'Machine wash: cold (max 30C or 90F)',
+      'Non-chlorine: bleach as needed',
+      'Do not tumble dry',
+      'Do not iron',
+      'Do not dryclean'
+    ]
+  },
+  {
+    id: 'shipping',
+    title: 'Shipping & delivery',
+    content: 'Accurate shipping options will be available in checkout after entering your full address.'
+  },
+  {
+    id: 'returns',
+    title: '30 day return policy',
+    content: `Any goods purchased can only be returned in accordance with the Terms and Conditions and Returns Policy.
+
+We want to make sure that you are satisfied with your order and we are committed to making things right in case of any issues. We will provide a solution in cases of any defects if you contact us within 30 days of receiving your order.
+
+See Terms of Use`
+  },
+  {
+    id: 'gpsr',
+    title: 'GPSR',
+    content: {
+      euRep: 'EU representative: Saffron Society, support@saffronsociety.com, 21 Attlebery Crescent, Paris, ON, N3L0H9, CA',
+      productInfo: 'Product information: Gildan 2000, 2 year warranty in EU and Northern Ireland as per Directive 1999/44/EC',
+      warnings: 'Warnings, Hazard: For adults',
+      care: 'Care instructions: Machine wash: cold (max 30C or 90F), Non-chlorine: bleach as needed, Do not tumble dry, Do not iron, Do not dryclean'
+    }
+  }
+]
 
 const COLOR_NAME_TO_HEX: Record<string, string> = {
   // Mappings from user's table: Printify HEX -> Nearest Gildan Color (using Gildan HEX as value for consistency)
@@ -154,6 +250,7 @@ const ProductDetails = () => {
   const [selectedColor, setSelectedColor] = useState<string>('')
   const [selectedSize, setSelectedSize] = useState<string>(AVAILABLE_SIZES[2]) // Default to M
   const [quantity, setQuantity] = useState(1)
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['about']))
 
   useEffect(() => {
     loadProduct()
@@ -188,6 +285,18 @@ const ProductDetails = () => {
     addToCart(cartItem)
   }
 
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId)
+      } else {
+        newSet.add(sectionId)
+      }
+      return newSet
+    })
+  }
+
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = placeholderImg
   }
@@ -199,24 +308,23 @@ const ProductDetails = () => {
 
   if (loading) {
     return (
-      <div className="container-custom py-16">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-maroon"></div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
       </div>
     )
   }
 
   if (!product) {
     return (
-      <div className="container-custom py-16">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Product not found</h2>
+          <h2 className="text-2xl font-semibold mb-4">Product not found</h2>
           <button
-            onClick={() => navigate('/')}
-            className="btn-primary"
+            onClick={() => navigate('/products')}
+            className="text-orange-500 hover:text-orange-600 flex items-center gap-2 mx-auto"
           >
-            Back to Home
+            <ChevronLeft className="w-4 h-4" />
+            Back to products
           </button>
         </div>
       </div>
@@ -224,125 +332,278 @@ const ProductDetails = () => {
   }
 
   return (
-    <div className="container-custom py-12 md:py-16">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
-      >
-        {/* Product Images */}
-        <div className="space-y-4">
-          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-            <img
-              src={mainImage}
-              alt={product.name}
-              onError={handleImageError}
-              className="w-full h-full object-contain"
-            />
-          </div>
-          
-          {product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setMainImage(`/api/proxy-image?url=${encodeURIComponent(image)}`)}
-                  className={`aspect-square bg-gray-100 rounded-lg overflow-hidden ${
-                    mainImage.includes(image) ? 'ring-2 ring-maroon' : ''
-                  }`}
-                >
-                  <img
-                    src={ `/api/proxy-image?url=${encodeURIComponent(image)}` }
-                    alt={`View ${index + 1}`}
-                    onError={handleImageError}
-                    className="w-full h-full object-contain"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="min-h-screen py-8 px-4 md:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={() => navigate('/products')}
+          className="mb-6 text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to products
+        </button>
 
-        {/* Product Info */}
-        <div className="space-y-6">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-gray-900">
-            {product.name}
-          </h1>
-          <p className="text-2xl font-bold text-gray-900">
-            CA${product.price.toFixed(2)}
-          </p>
-
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">Color</h3>
-            <p className="text-base font-medium text-gray-700">
-              {hexToName(selectedColor) || 'Select a color'}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {product.colors?.map((hex, idx) => (
-                <button
-                  key={idx}
-                  className={`w-10 h-10 rounded-full border-2 ${
-                    selectedColor === hex ? 'border-maroon' : 'border-gray-300'
-                  } hover:border-maroon focus:outline-none focus:border-maroon`}
-                  style={{ backgroundColor: hex }}
-                  onClick={() => setSelectedColor(hex)}
-                />
-              ))}
-            </div>
-          </div>
-
+        <div className="grid lg:grid-cols-2 gap-12">
+          {/* Image Gallery */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">Size</h3>
-            <div className="flex flex-wrap gap-3">
-              {AVAILABLE_SIZES.map((size) => (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="aspect-square bg-gray-100 rounded-lg overflow-hidden"
+            >
+              <img
+                src={mainImage}
+                alt={product.name}
+                className="w-full h-full object-contain"
+                onError={handleImageError}
+              />
+            </motion.div>
+            
+            {/* Thumbnail Gallery with Scrollbar */}
+            {product.images.length > 1 && (
+              <div className="h-32 overflow-y-auto custom-scrollbar">
+                <div className="grid grid-cols-4 gap-2 pr-2">
+                  {product.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setMainImage(`/api/proxy-image?url=${encodeURIComponent(img)}`)}
+                      className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${
+                        mainImage.includes(encodeURIComponent(img)) ? 'border-orange-500' : 'border-transparent'
+                      }`}
+                    >
+                      <img
+                        src={`/api/proxy-image?url=${encodeURIComponent(img)}`}
+                        alt={`${product.name} view ${idx + 1}`}
+                        className="w-full h-full object-contain"
+                        onError={handleImageError}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{decodeHTMLEntities(product.name)}</h1>
+              <p className="text-2xl font-semibold text-orange-600">${product.price.toFixed(2)}</p>
+            </div>
+
+            {/* Color Selection */}
+            {product.colors && product.colors.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Color</h3>
+                <div className="flex flex-wrap gap-3">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        selectedColor === color ? 'border-gray-800 scale-110' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: COLOR_NAME_TO_HEX[color] || color }}
+                      title={hexToName(color)}
+                    />
+                  ))}
+                </div>
+                {selectedColor && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Selected: {hexToName(selectedColor)}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Size Selection */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Size</h3>
+              <div className="grid grid-cols-4 gap-2">
+                {AVAILABLE_SIZES.map(size => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`py-2 px-4 border rounded-lg transition-colors ${
+                      selectedSize === size
+                        ? 'border-orange-500 bg-orange-50 text-orange-700'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quantity */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Quantity</h3>
+              <div className="flex items-center gap-4">
                 <button
-                  key={size}
-                  className={`px-4 py-2 border rounded-md font-medium ${
-                    selectedSize === size
-                      ? 'bg-maroon text-white border-maroon'
-                      : 'border-gray-300 hover:border-maroon'
-                  }`}
-                  onClick={() => setSelectedSize(size)}
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-10 h-10 rounded-lg border border-gray-300 hover:border-gray-400 flex items-center justify-center transition-colors"
                 >
-                  {size}
+                  -
                 </button>
+                <span className="w-12 text-center font-medium">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="w-10 h-10 rounded-lg border border-gray-300 hover:border-gray-400 flex items-center justify-center transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Add to Cart & Wishlist */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-orange-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Add to Cart
+              </button>
+              <button className="p-3 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
+                <Heart className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Return Policy */}
+            <div className="border-t pt-6 space-y-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Package className="w-4 h-4" />
+                <span>30 days return policy.</span>
+                <a href="/terms" className="text-orange-500 hover:text-orange-600 underline">
+                  See details
+                </a>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Shield className="w-4 h-4" />
+                <span>Secure payments accepted</span>
+              </div>
+            </div>
+
+            {/* Product Information Sections - Now under payment info */}
+            <div className="border-t pt-6">
+              {getProductInfoSections(product).map((section) => (
+                <div key={section.id} className="border-b border-gray-200">
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className="w-full py-4 px-0 flex items-center justify-between text-left hover:text-orange-600 transition-colors"
+                  >
+                    <h2 className="text-lg font-semibold">{section.title}</h2>
+                    {expandedSections.has(section.id) ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {expandedSections.has(section.id) && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-4 text-gray-700">
+                          {section.id === 'about' && section.content && typeof section.content === 'object' && 'designTitle' in section.content && (
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="font-semibold mb-2">The Design</h3>
+                                <p className="font-medium mb-2">{section.content.designTitle}</p>
+                                <p>{section.content.designDescription}</p>
+                                <button className="text-orange-500 hover:text-orange-600 text-sm mt-2">
+                                  Read more
+                                </button>
+                              </div>
+                              {section.content.features && (
+                                <ul className="space-y-2">
+                                  {section.content.features.map((feature, idx) => (
+                                    <li key={idx} className="flex items-start">
+                                      <span className="text-orange-500 mr-2">•</span>
+                                      {feature}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                          
+                          {section.id === 'details' && Array.isArray(section.content) && (
+                            <div className="space-y-4">
+                              {section.content.map((detail, idx) => (
+                                <div key={idx}>
+                                  {typeof detail === 'object' && detail.title ? (
+                                    <>
+                                      <h4 className="font-semibold mb-1">{detail.title}</h4>
+                                      <p className="text-sm">{detail.description}</p>
+                                    </>
+                                  ) : (
+                                    <p className="text-sm">{typeof detail === 'string' ? detail : ''}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {section.id === 'care' && Array.isArray(section.content) && (
+                            <ul className="space-y-1">
+                              {section.content.map((instruction, idx) => (
+                                <li key={idx} className="flex items-start">
+                                  <span className="text-orange-500 mr-2">•</span>
+                                  {typeof instruction === 'string' ? instruction : ''}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          
+                          {section.id === 'shipping' && typeof section.content === 'string' && (
+                            <p>{section.content}</p>
+                          )}
+                          
+                          {section.id === 'returns' && typeof section.content === 'string' && (
+                            <div className="space-y-3">
+                              {section.content.split('\n\n').map((paragraph, idx) => (
+                                <p key={idx}>
+                                  {paragraph.includes('Terms of Use') ? (
+                                    <>
+                                      {paragraph.split('Terms of Use')[0]}
+                                      <a href="/terms" className="text-orange-500 hover:text-orange-600 underline">
+                                        Terms of Use
+                                      </a>
+                                    </>
+                                  ) : (
+                                    paragraph
+                                  )}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {section.id === 'gpsr' && section.content && typeof section.content === 'object' && 'euRep' in section.content && (
+                            <div className="space-y-3 text-sm">
+                              <p>{section.content.euRep}</p>
+                              <p>{section.content.productInfo}</p>
+                              <p>{section.content.warnings}</p>
+                              <p>{section.content.care}</p>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ))}
             </div>
           </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">Quantity</h3>
-            <div className="flex items-center border border-gray-300 rounded-md w-fit">
-              <button
-                className="px-4 py-2 text-xl"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              >
-                -
-              </button>
-              <span className="px-6 py-2 border-x border-gray-300">{quantity}</span>
-              <button
-                className="px-4 py-2 text-xl"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          <button
-            className="w-full bg-maroon text-white py-4 rounded-md font-semibold hover:bg-maroon/90 transition-colors"
-            onClick={handleAddToCart}
-          >
-            Add to Cart
-          </button>
-
-          <div className="prose max-w-none">
-            <h3 className="text-lg font-semibold text-gray-800">Description</h3>
-            <p className="text-gray-600">{product.description}</p>
-          </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

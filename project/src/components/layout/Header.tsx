@@ -5,15 +5,10 @@ import { useCart } from '../../context/CartContext.tsx';
 import CartDropdown from '../cart/CartDropdown.tsx';
 import logo from '../../assets/logo_big.png'
 
-
-type HeaderProps = {
-  isCartOpen: boolean;
-  setIsCartOpen: (isOpen: boolean) => void;
-};
-
-const Header = ({ isCartOpen, setIsCartOpen }: HeaderProps) => {
+const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { state } = useCart();
   const location = useLocation();
 
