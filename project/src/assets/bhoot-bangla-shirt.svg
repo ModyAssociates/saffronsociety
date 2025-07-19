@@ -1,0 +1,36 @@
+<svg width="400" height="500" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- T-shirt base -->
+  <path d="M80 120 C80 100, 100 80, 120 80 L280 80 C300 80, 320 100, 320 120 L350 140 L350 200 L320 200 L320 450 C320 470, 300 490, 280 490 L120 490 C100 490, 80 470, 80 450 L80 200 L50 200 L50 140 Z" fill="#F5F5DC" stroke="#DDD" stroke-width="2"/>
+  
+  <!-- Hindi text -->
+  <text x="200" y="180" text-anchor="middle" fill="#8B4513" font-family="Arial" font-size="16" font-weight="bold">भूत बंगला</text>
+  
+  <!-- English text -->
+  <text x="200" y="220" text-anchor="middle" fill="#D2691E" font-family="Arial" font-size="24" font-weight="bold">BHOOT</text>
+  <text x="200" y="250" text-anchor="middle" fill="#D2691E" font-family="Arial" font-size="24" font-weight="bold">BANGLA</text>
+  <text x="200" y="280" text-anchor="middle" fill="#8B4513" font-family="Arial" font-size="16" font-weight="bold">1965</text>
+  
+  <!-- Haunted house silhouette -->
+  <g transform="translate(150, 300)">
+    <!-- Main house structure -->
+    <rect x="20" y="40" width="60" height="50" fill="#2C1810"/>
+    <!-- Roof -->
+    <polygon points="15,40 50,15 85,40" fill="#1a1a1a"/>
+    <!-- Tower -->
+    <rect x="5" y="20" width="20" height="70" fill="#2C1810"/>
+    <polygon points="0,20 15,5 30,20" fill="#1a1a1a"/>
+    <!-- Windows -->
+    <rect x="30" y="50" width="8" height="12" fill="#FFD700" opacity="0.8"/>
+    <rect x="52" y="50" width="8" height="12" fill="#FFD700" opacity="0.8"/>
+    <rect x="10" y="40" width="6" height="8" fill="#FFD700" opacity="0.8"/>
+    <!-- Door -->
+    <rect x="44" y="70" width="12" height="20" fill="#000"/>
+  </g>
+  
+  <!-- Spooky elements -->
+  <g transform="translate(120, 350)">
+    <!-- Bats -->
+    <path d="M20 10 Q15 5, 10 10 Q15 15, 20 10 Q25 5, 30 10 Q25 15, 20 10" fill="#000" opacity="0.6"/>
+    <path d="M140 20 Q135 15, 130 20 Q135 25, 140 20 Q145 15, 150 20 Q145 25, 140 20" fill="#000" opacity="0.6"/>
+  </g>
+</svg>

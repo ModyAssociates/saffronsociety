@@ -52,9 +52,9 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen">
       <Header />
-      <main className="flex-grow">
+      <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductPage />} />

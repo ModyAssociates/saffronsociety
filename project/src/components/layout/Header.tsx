@@ -1,93 +1,87 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Menu, X, User } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ShoppingCart, Search, User, Menu, X } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import logo from '../../assets/logo_big.png'
 
-const Header = () => {
+export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const { state } = useCart()
-  const { user, profile, isAdmin } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
 
-  const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0)
+  const cartItemCount = state.items.reduce((sum, item) => sum + item.quantity, 0)
 
-  const handleCartClick = () => {
-    navigate('/cart')
-    setIsMenuOpen(false)
-  }
-
-  const handleAccountClick = () => {
-    navigate('/account')
-    setIsMenuOpen(false)
-  }
-
-  const navigationLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/products', label: 'Products' },
-    { href: '/shirt-quality', label: 'Quality' },
-  ]
-
-  if (isAdmin) {
-    navigationLinks.push({ href: '/admin', label: 'Admin Dashboard' })
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    // TODO: Implement search functionality
+    console.log('Search:', searchQuery)
+    setIsSearchOpen(false)
+    setSearchQuery('')
   }
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
+    <header className="bg-[#F5E6D3] border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img src={logo} alt="Saffron Society" className="h-8 w-auto" />
+          <Link to="/" className="flex-shrink-0">
+            <h1 className="text-xl font-bold text-[#8B4513] tracking-wide">SAFFRON SOCIETY TEES</h1>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navigationLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="text-gray-700 hover:text-orange-500 transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link to="/" className="text-gray-800 hover:text-[#8B4513] transition-colors">
+              Home
+            </Link>
+            <Link to="/products" className="text-gray-800 hover:text-[#8B4513] transition-colors">
+              Shop
+            </Link>
+            <Link to="/about" className="text-gray-800 hover:text-[#8B4513] transition-colors">
+              About
+            </Link>
           </nav>
 
-          {/* Icons */}
+          {/* Right side icons */}
           <div className="flex items-center space-x-4">
-            {/* User Account */}
+            {/* Search */}
             <button
-              onClick={handleAccountClick}
-              className="relative text-gray-700 hover:text-orange-500 transition-colors"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="text-gray-800 hover:text-[#8B4513] transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* User Account */}
+            <Link
+              to={user ? "/account" : "/account"}
+              className="text-gray-800 hover:text-[#8B4513] transition-colors"
               aria-label="User account"
             >
-              <User className="w-6 h-6" />
-              {user && (
-                <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
-              )}
-            </button>
+              <User className="w-5 h-5" />
+            </Link>
 
             {/* Cart */}
-            <button
-              onClick={handleCartClick}
-              className="relative text-gray-700 hover:text-orange-500 transition-colors"
+            <Link
+              to="/cart"
+              className="relative text-gray-800 hover:text-[#8B4513] transition-colors"
               aria-label="Shopping cart"
             >
-              <ShoppingCart className="w-6 h-6" />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItems}
+              <ShoppingCart className="w-5 h-5" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#8B4513] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItemCount}
                 </span>
               )}
-            </button>
+            </Link>
 
-            {/* Mobile menu button */}
+            {/* Mobile Menu Toggle */}
             <button
-              className="md:hidden text-gray-700 hover:text-orange-500 transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden text-gray-800 hover:text-[#8B4513] transition-colors"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -95,42 +89,84 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Search Bar */}
         <AnimatePresence>
-          {isMenuOpen && (
-            <motion.nav
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden"
+          {isSearchOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
             >
-              <div className="px-2 pt-2 pb-3 space-y-1">
-                {navigationLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className="block px-3 py-2 text-gray-700 hover:text-orange-500 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="border-t border-gray-200 pt-2 mt-2">
+              <form onSubmit={handleSearch} className="py-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
+                    autoFocus
+                  />
                   <button
-                    onClick={handleAccountClick}
-                    className="w-full text-left px-3 py-2 text-gray-700 hover:text-orange-500 transition-colors flex items-center gap-2"
+                    type="submit"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-[#8B4513]"
                   >
-                    <User className="w-4 h-4" />
-                    {user ? `${profile?.full_name || 'My Account'}` : 'Sign In'}
+                    <Search className="w-5 h-5" />
                   </button>
                 </div>
-              </div>
-            </motion.nav>
+              </form>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.nav
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden border-t border-gray-200 overflow-hidden"
+          >
+            <div className="px-4 py-2 space-y-1">
+              <Link
+                to="/"
+                className="block px-3 py-2 text-gray-800 hover:text-[#8B4513] hover:bg-gray-100 rounded-md transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                to="/products"
+                className="block px-3 py-2 text-gray-800 hover:text-[#8B4513] hover:bg-gray-100 rounded-md transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Shop
+              </Link>
+              <Link
+                to="/about"
+                className="block px-3 py-2 text-gray-800 hover:text-[#8B4513] hover:bg-gray-100 rounded-md transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
+              </Link>
+              {user && (
+                <Link
+                  to="/account"
+                  className="block px-3 py-2 text-gray-800 hover:text-[#8B4513] hover:bg-gray-100 rounded-md transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Account
+                </Link>
+              )}
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   )
 }
-
-export default Header
