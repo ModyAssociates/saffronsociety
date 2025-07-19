@@ -26,7 +26,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link to={`/product/${product.id}`} className="block group">
         <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
           {/* Product Image */}
-          <div className="aspect-square bg-gray-100 relative overflow-hidden">
+          <div className="aspect-[4/5] bg-gray-100 relative overflow-hidden">
             <img
               src={imageError ? '/assets/logo_big.png' : displayImage}
               alt={product.name}

@@ -1,6 +1,6 @@
 import { Product } from '../types';
 
-const API_URL = '/.netlify/functions/printify-products';
+const API_URL = '/api/printify-products';
 
 // Color mapping for Printify hex codes to Gildan color names
 export const COLOR_NAME_TO_HEX: Record<string, string> = {
@@ -81,9 +81,12 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
         image: mainImage,
         images: images.length > 0 ? images : [mainImage],
         colors: colors,
-        description: item.description || '',
-        category: item.category || 'T-Shirts'
-      };
+        description: item.description || 'A stylish Bollywood-inspired t-shirt design',
+        category: item.category || 'T-Shirts',
+        tags: Array.isArray(item.tags) ? item.tags : ['bollywood', 'vintage'],
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        variants: Array.isArray(item.variants) ? item.variants : []
+      } as Product;
     });
   } catch (error) {
     console.error('[printify.ts] Error fetching Printify products:', error);

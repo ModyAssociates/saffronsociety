@@ -23,12 +23,61 @@
     @apply bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors duration-200;
   }
   
+  .btn-lg {
+    @apply py-3 px-8 text-lg;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent border-2 border-orange-500 text-orange-500 font-semibold py-2 px-4 rounded-lg hover:bg-orange-500 hover:text-white transition-colors duration-200;
+  }
+  
   .btn-secondary {
     @apply bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors duration-200;
   }
   
   .card {
     @apply bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .aspect-card {
+    @apply aspect-[4/5];
+  }
+  
+  .shadow-large {
+    @apply shadow-2xl;
+  }
+  
+  .shadow-medium {
+    @apply shadow-lg;
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-300;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-1;
+  }
+  
+  .text-hero {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+  }
+  
+  .text-accent {
+    @apply text-orange-500;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-bollywood {
+    @apply bg-gradient-to-br from-orange-100 via-yellow-50 to-orange-200;
+  }
+  
+  .bg-paisley {
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,165,0,0.3) 1px, transparent 0);
+    background-size: 20px 20px;
   }
   
   .input-field {

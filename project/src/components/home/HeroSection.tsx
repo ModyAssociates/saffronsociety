@@ -1,8 +1,31 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Star, Users, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Product } from '../../types';
 
-const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  heroProduct?: Product | null;
+  loading?: boolean;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ heroProduct, loading = false }) => {
+  // Get hero image URL - simplified to match product structure
+  const getHeroImage = () => {
+    if (!heroProduct) return '/assets/logo_big.png';
+    
+    // Handle both string and object image formats as per project patterns
+    if (typeof heroProduct.image === 'string') {
+      return heroProduct.image;
+    }
+    
+    // If image is an object with src property
+    if (heroProduct.image && typeof heroProduct.image === 'object' && 'src' in heroProduct.image) {
+      return (heroProduct.image as { src: string }).src;
+    }
+    
+    return '/assets/logo_big.png';
+  };
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-bollywood">
       {/* Background Pattern */}
@@ -23,10 +46,95 @@ const HeroSection: React.FC = () => {
       
       <div className="container-custom relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen py-20">
-          {/* Left Side - Content */}
+          {/* Left Side - Product Image */}
           <motion.div
-            className="space-y-8"
+            className="relative order-2 lg:order-1"
             initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            {loading ? (
+              <div className="max-w-md mx-auto">
+                <div className="aspect-card bg-gray-200 animate-pulse rounded-2xl" />
+              </div>
+            ) : heroProduct ? (
+              <div className="max-w-md mx-auto">
+                {/* Hero Product Image */}
+                <motion.div
+                  className="aspect-card rounded-2xl overflow-hidden shadow-large hover-lift"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Link to={`/product/${heroProduct.id}`}>
+                    <img
+                      src={getHeroImage()}
+                      alt={heroProduct.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/assets/logo_big.png';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-90 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-gray-900 truncate">{heroProduct.name}</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        ${heroProduct.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </Link>
+                </motion.div>
+              </div>
+            ) : (
+              <div className="max-w-md mx-auto">
+                {/* Main Image */}
+                <motion.div
+                  className="aspect-card rounded-2xl overflow-hidden shadow-large hover-lift"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <img
+                    src="/assets/male-model.png"
+                    alt="Stylish streetwear model showcasing vintage-inspired design"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                </motion.div>
+              </div>
+            )}
+            
+            {/* Floating Elements */}
+            <motion.div
+              className="absolute -top-4 -right-4 w-20 h-20 bg-saffron-400 rounded-full blur-xl opacity-30"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            
+            <motion.div
+              className="absolute -bottom-8 -left-8 w-32 h-32 bg-maroon-400 rounded-full blur-xl opacity-20"
+              animate={{
+                scale: [1, 1.3, 1],
+                opacity: [0.2, 0.4, 0.2],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
+            />
+          </motion.div>
+
+          {/* Right Side - Content */}
+          <motion.div
+            className="space-y-8 order-1 lg:order-2"
+            initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
@@ -50,12 +158,12 @@ const HeroSection: React.FC = () => {
                 transition={{ delay: 0.3, duration: 0.8 }}
               >
                 <span className="text-accent text-3xl md:text-4xl lg:text-5xl block mb-2">
-                  Vintage Bollywood
+                  Wear the
                 </span>
                 <span className="text-gradient block">
-                  Meets Modern
+                  Cult Classics
                 </span>
-                <span className="block">Hustle</span>
+                <span className="block">Collection</span>
               </motion.h1>
               
               <motion.p
@@ -64,9 +172,10 @@ const HeroSection: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
               >
-                Discover streetwear that tells your story. From retro-fusion designs 
-                to bold cultural expressions, every piece is crafted for the modern 
-                individual who honors the past while creating the future.
+                {heroProduct 
+                  ? `Featuring: ${heroProduct.name} - ${heroProduct.description || 'Exclusive Bollywood-inspired design for the modern individual who honors the past while creating the future.'}`
+                  : 'Discover streetwear that tells your story. From retro-fusion designs to bold cultural expressions, every piece is crafted for the modern individual who honors the past while creating the future.'
+                }
               </motion.p>
             </div>
             
@@ -109,14 +218,16 @@ const HeroSection: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.6 }}
             >
-              <button className="btn-primary btn-lg group">
+              <Link to="/shop" className="btn-primary btn-lg group">
                 <span>Shop Collection</span>
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </button>
+              </Link>
               
-              <button className="btn-outline btn-lg">
-                View Lookbook
-              </button>
+              {heroProduct && (
+                <Link to={`/product/${heroProduct.id}`} className="btn-outline btn-lg">
+                  View This Product
+                </Link>
+              )}
             </motion.div>
             
             {/* Features */}
@@ -141,83 +252,6 @@ const HeroSection: React.FC = () => {
                 </div>
               ))}
             </motion.div>
-          </motion.div>
-          
-          {/* Right Side - Lifestyle Images */}
-          <motion.div
-            className="relative"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          >
-            <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-              {/* Main Image */}
-              <motion.div
-                className="col-span-2 aspect-card rounded-2xl overflow-hidden shadow-large hover-lift"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.3 }}
-              >
-                <img
-                  src="/src/assets/male-model.png"
-                  alt="Stylish streetwear model showcasing vintage-inspired design"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-              </motion.div>
-              
-              {/* Secondary Images */}
-              <motion.div
-                className="aspect-card rounded-xl overflow-hidden shadow-medium hover-lift"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.3 }}
-              >
-                <img
-                  src="/src/assets/female-model.png"
-                  alt="Modern streetwear collection piece"
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-              
-              <motion.div
-                className="aspect-card rounded-xl overflow-hidden shadow-medium hover-lift"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.3 }}
-              >
-                <img
-                  src="/src/assets/male-model-2.png"
-                  alt="Heritage-inspired streetwear design"
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-            </div>
-            
-            {/* Floating Elements */}
-            <motion.div
-              className="absolute -top-4 -right-4 w-20 h-20 bg-saffron-400 rounded-full blur-xl opacity-30"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-            
-            <motion.div
-              className="absolute -bottom-8 -left-8 w-32 h-32 bg-maroon-400 rounded-full blur-xl opacity-20"
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 1,
-              }}
-            />
           </motion.div>
         </div>
       </div>

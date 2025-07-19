@@ -6,7 +6,7 @@
   functions = "netlify/functions"
 
 [dev]
-  command = "cd project && npm run dev"
+  command = "npm run dev --prefix project"
   targetPort = 5174
   port = 3000
   publish = "project/dist"
