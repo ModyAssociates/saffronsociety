@@ -4,10 +4,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: 5174,
     proxy: {
       '/.netlify/functions': {
-        target: 'http://localhost:8888',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
       },
@@ -17,8 +17,6 @@ export default defineConfig({
     alias: {
       // Redirect Emotion's CJS call to an ESM module on esm.sh:
       '@emotion/is-prop-valid': 'https://esm.sh/is-prop-valid',
-      // And still handle cookie → cookie-es
-      cookie: 'cookie-es',
     },
   },
   optimizeDeps: {

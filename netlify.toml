@@ -1,18 +1,18 @@
 # netlify.toml
 
 [build]
-  base = "project"
-  command = "npm run build"
-  publish = "dist"
-  functions = "../netlify/functions"  # Correct path from project base
+  command = "cd project && npm run build"
+  publish = "project/dist"
+  functions = "netlify/functions"
 
 [dev]
-  base = "project"
   command = "npm run dev"
-  targetPort = 3000  # Vite is running on 3000
-  port = 3002
-  publish = "dist"
-  functions = "../netlify/functions"  # Correct path from project base
+  targetPort = 5174
+  port = 3000
+  publish = "project/dist"
+  functions = "netlify/functions"
+  autoLaunch = false
+  framework = "#custom"
 
 [[redirects]]
   from = "/api/proxy-image"

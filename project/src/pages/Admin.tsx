@@ -69,6 +69,11 @@ const Admin = () => {
   }, [isAdmin, authLoading, navigate])
 
   const fetchDashboardData = async () => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    
     try {
       setLoading(true)
       
@@ -136,6 +141,8 @@ const Admin = () => {
   }
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    if (!supabase) return
+    
     try {
       const { error } = await supabase
         .from('orders')
@@ -201,6 +208,24 @@ const Admin = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    )
+  }
+
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
+            <div className="p-6 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-amber-800">Database is currently not configured.</p>
+              <p className="text-sm text-amber-600 mt-2">
+                Please configure Supabase to enable admin features.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

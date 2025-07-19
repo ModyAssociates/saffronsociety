@@ -1,107 +1,127 @@
-// netlify/functions/printify-products.js
-// Added logging for the raw API response and errors to debug empty/missing data.
+import fetch from 'node-fetch';
 
-exports.handler = async (event, context) => {
-  const { PRINTIFY_API_TOKEN, PRINTIFY_SHOP_ID } = process.env;
+export const handler = async (event) => {
+  const apiToken = process.env.PRINTIFY_API_TOKEN;
+  const shopId = process.env.PRINTIFY_SHOP_ID;
 
-  if (!PRINTIFY_API_TOKEN || !PRINTIFY_SHOP_ID) {
-    console.log('Missing environment variables, returning mock data');
-    // Return mock data for testing
+  if (!apiToken || !shopId) {
+    console.error('Missing Printify API credentials');
     return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-      body: JSON.stringify({
-        data: [
-          {
-            id: "680bfba2fc5094250c0fcaf1",
-            title: "Gabbar Singh Warning",
-            description: "Classic T-shirt with iconic Gabbar Singh dialogue",
-            images: [
-              { src: "https://images.printify.com/mockup/680bfba2fc5094250c0fcaf1/88947/78606/gildan-unisex-ultra-cotton-tee.jpg?s=400&t=1729064867", is_default: true }
-            ],
-            variants: [
-              { id: 1, price: 2599, is_enabled: true, options: { color: "Black", size: "S" } },
-              { id: 2, price: 2599, is_enabled: true, options: { color: "White", size: "S" } },
-              { id: 3, price: 2599, is_enabled: true, options: { color: "Navy", size: "M" } },
-              { id: 4, price: 2599, is_enabled: true, options: { color: "Red", size: "L" } }
-            ],
-            tags: ["T-shirt"],
-            colors: ["#000000", "#FFFFFF", "#1A2E5F", "#E3342F"] // Pre-mapped colors for mock data
-          },
-          // ... (add other mocks if needed for testing)
-        ]
-      })
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Missing API credentials' }),
     };
   }
 
   try {
-    const response = await fetch(
-      `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products.json`,
-      {
-        headers: {
-          'Authorization': `Bearer ${PRINTIFY_API_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const responseBody = await response.text(); // Get raw text for logging
-    console.log(`Printify API response status: ${response.status}`);
-    console.log(`Printify API response body: ${responseBody.substring(0, 500)}...`); // Log first 500 chars to avoid huge logs
+    const response = await fetch(`https://api.printify.com/v1/shops/${shopId}/products.json`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.ok) {
-      throw new Error(`API responded with status ${response.status}: ${responseBody}`);
+      console.error('Printify API error:', response.status, response.statusText);
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: 'Failed to fetch products' }),
+      };
     }
 
-    const data = JSON.parse(responseBody);
-    
-    // Process the data to extract colors
-    const processedData = data.data.map(product => {
-      // Extract color information from product options
-      const colorOption = product.options?.find(opt => opt.type === 'color');
-      let colors = [];
-      
-      if (colorOption && colorOption.values) {
-        // Printify provides hex colors directly in the colors array
-        colors = colorOption.values
-          .filter(v => v.colors && v.colors.length > 0)
-          .map(v => v.colors[0]) // Get the first hex color from each value
-          .filter(Boolean); // Remove any undefined/null values
-        
-        console.log(`Product: ${product.title}`);
-        console.log(`Color option found:`, colorOption);
-        console.log(`Extracted colors:`, colors);
-      } else {
-        console.log(`Product: ${product.title} - No color option found`);
-        console.log(`Available options:`, product.options?.map(o => o.type));
+    const data = await response.json();
+    console.log('Printify API response:', JSON.stringify(data, null, 2));
+
+    // Sort products by created_at date (most recent first)
+    const sortedProducts = data.data.sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      return dateB - dateA; // Most recent first
+    });
+
+    // Transform Printify data to match our Product interface
+    const products = sortedProducts.map(product => {
+      // Get the first image from variants or product images
+      let primaryImage = null;
+      if (product.images && product.images.length > 0) {
+        primaryImage = product.images[0].src;
+      } else if (product.variants && product.variants.length > 0 && product.variants[0].images && product.variants[0].images.length > 0) {
+        primaryImage = product.variants[0].images[0].src;
       }
+
+      // Extract unique colors from variants
+      const colors = [];
+      const colorSet = new Set();
       
+      if (product.variants) {
+        product.variants.forEach(variant => {
+          if (variant.options && variant.options.color) {
+            const colorHex = variant.options.color;
+            if (!colorSet.has(colorHex)) {
+              colorSet.add(colorHex);
+              colors.push({
+                name: variant.title || 'Color',
+                hex: colorHex
+              });
+            }
+          }
+        });
+      }
+
+      // Get all variant images
+      const images = [];
+      if (product.variants) {
+        product.variants.forEach(variant => {
+          if (variant.images && variant.images.length > 0) {
+            variant.images.forEach(img => {
+              if (img.src && !images.some(existingImg => existingImg.src === img.src)) {
+                images.push({
+                  src: img.src,
+                  color: variant.options?.color || null,
+                  position: img.position || 'front'
+                });
+              }
+            });
+          }
+        });
+      }
+
       return {
-        ...product,
-        colors: colors
+        id: product.id,
+        name: product.title,
+        description: product.description || '',
+        price: product.variants?.[0]?.price ? parseFloat(product.variants[0].price) / 100 : 0,
+        image: primaryImage || '',
+        images: images,
+        category: 'T-Shirts',
+        sizes: product.variants?.map(v => v.title).filter(Boolean) || [],
+        colors: colors,
+        variants: product.variants?.map(variant => ({
+          id: variant.id,
+          size: variant.title,
+          price: variant.price ? parseFloat(variant.price) / 100 : 0,
+          available: variant.is_enabled || false,
+          color: variant.options?.color || null,
+          images: variant.images || []
+        })) || [],
+        created_at: product.created_at
       };
     });
+
+    console.log(`Returning ${products.length} products from Printify (sorted by most recent)`);
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
       },
-      body: JSON.stringify({ data: processedData }),
+      body: JSON.stringify({ products }),
     };
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error('Error fetching from Printify:', error);
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-      body: JSON.stringify({ error: 'Failed to fetch products' }),
+      body: JSON.stringify({ error: error.message }),
     };
   }
 };

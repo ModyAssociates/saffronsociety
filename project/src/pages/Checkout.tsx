@@ -1,277 +1,188 @@
-import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { useCart } from '../context/CartContext'
-import { useNavigate } from 'react-router-dom'
-import { CreditCard, MapPin } from 'lucide-react'
-import type { CartItem } from '../types/cart'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useCart } from '../context/CartContext';
 
-const Checkout = () => {
-  const { user, session } = useAuth()
-  const { state, clearCart } = useCart()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [shippingAddress, setShippingAddress] = useState({
+export default function Checkout() {
+  const navigate = useNavigate();
+  const { items, total, clearCart } = useCart();
+  const [formData, setFormData] = useState({
+    email: '',
     firstName: '',
     lastName: '',
-    email: user?.email || '',
-    phone: '',
-    address1: '',
-    address2: '',
+    address: '',
     city: '',
     state: '',
-    zip: '',
-    country: 'US'
-  })
-
-  const items = state.items
-  const total = items.reduce((sum: number, item: CartItem) => sum + (item.price * item.quantity), 0)
+    zipCode: '',
+    country: 'US',
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !session) {
-      navigate('/account')
-      return
-    }
+    e.preventDefault();
+    // Here you would normally process the payment
+    // For now, we'll just simulate a successful order
+    clearCart();
+    navigate('/order-confirmation');
+  };
 
-    setLoading(true)
-    try {
-      const response = await fetch('/.netlify/functions/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          items,
-          shippingAddress,
-          paymentInfo: {
-            method: 'card',
-            last4: '****' // This would come from your payment processor
-          }
-        })
-      })
-
-      const result = await response.json()
-      
-      if (result.success) {
-        clearCart()
-        navigate('/order-success', { state: { orderId: result.orderId } })
-      } else {
-        throw new Error(result.error || 'Failed to create order')
-      }
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Failed to process order. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen py-16">
-        <div className="max-w-md mx-auto px-4 text-center">
-          <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
-          <p className="text-gray-600 mb-6">You need to be signed in to checkout.</p>
-          <button
-            onClick={() => navigate('/account')}
-            className="bg-orange-500 text-white py-2 px-6 rounded-lg hover:bg-orange-600"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen py-16">
-        <div className="max-w-md mx-auto px-4 text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <button
-            onClick={() => navigate('/products')}
-            className="bg-orange-500 text-white py-2 px-6 rounded-lg hover:bg-orange-600"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
-    )
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   return (
-    <div className="min-h-screen py-16">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Order Summary */}
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            <div className="space-y-4">
-              {items.map((item: CartItem) => (
-                <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="flex justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Checkout Form */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-gray-600">
-                      {item.selectedSize} / {item.selectedColor} × {item.quantity}
-                    </p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      required
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    />
                   </div>
-                  <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      required
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
                 </div>
-              ))}
-              <div className="border-t pt-4">
-                <div className="flex justify-between text-xl font-bold">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Shipping Form */}
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Shipping Information
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">First Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Address
+                  </label>
                   <input
                     type="text"
+                    name="address"
                     required
-                    value={shippingAddress.firstName}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, firstName: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    value={formData.address}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      required
+                      value={formData.city}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      name="state"
+                      required
+                      value={formData.state}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Last Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ZIP Code
+                  </label>
                   <input
                     type="text"
+                    name="zipCode"
                     required
-                    value={shippingAddress.lastName}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, lastName: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    value={formData.zipCode}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={shippingAddress.email}
-                  onChange={(e) => setShippingAddress(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone</label>
-                <input
-                  type="tel"
-                  required
-                  value={shippingAddress.phone}
-                  onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Address</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.address1}
-                  onChange={(e) => setShippingAddress(prev => ({ ...prev, address1: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Address 2 (Optional)</label>
-                <input
-                  type="text"
-                  value={shippingAddress.address2}
-                  onChange={(e) => setShippingAddress(prev => ({ ...prev, address2: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">City</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.city}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">State</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.state}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, state: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">ZIP Code</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.zip}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, zip: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Country</label>
-                  <select
-                    value={shippingAddress.country}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  >
-                    <option value="US">United States</option>
-                    <option value="CA">Canada</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="AU">Australia</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="border-t pt-6">
-                <p className="text-sm text-gray-600 mb-4">
-                  Payment processing will be handled securely. This is a demo checkout.
-                </p>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-orange-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-yellow-500 text-gray-900 font-semibold py-3 rounded hover:bg-yellow-400 transition duration-300"
                 >
-                  <CreditCard className="w-5 h-5" />
-                  {loading ? 'Processing...' : `Place Order - $${total.toFixed(2)}`}
+                  Place Order
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
+
+          {/* Order Summary */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white p-6 rounded-lg shadow-sm h-fit"
+          >
+            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+            <div className="space-y-3 mb-4">
+              {items.map((item) => (
+                <div key={`${item.product.id}-${item.selectedSize}-${item.selectedColor}`} className="flex justify-between text-sm">
+                  <span>
+                    {item.product.name} x {item.quantity}
+                  </span>
+                  <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="border-t pt-4">
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-export default Checkout

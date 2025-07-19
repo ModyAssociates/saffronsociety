@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseAvailable } from '../lib/supabase'
 import { User, LogOut, Package, AlertCircle } from 'lucide-react'
 
 const Account = () => {
@@ -33,6 +33,23 @@ const Account = () => {
   }
 
   if (!user) {
+    // If Supabase is not available, show a simple message
+    if (!supabase) {
+      return (
+        <div className="min-h-screen py-16">
+          <div className="max-w-md mx-auto px-4 text-center">
+            <h1 className="text-3xl font-bold mb-8">Account</h1>
+            <div className="p-6 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-amber-800">Authentication is currently not configured.</p>
+              <p className="text-sm text-amber-600 mt-2">
+                Please configure Supabase to enable user accounts.
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="min-h-screen py-16">
         <div className="max-w-md mx-auto px-4">
@@ -52,7 +69,7 @@ const Account = () => {
           )}
           
           <Auth
-            supabaseClient={supabase}
+            supabaseClient={supabase!}
             appearance={{
               theme: ThemeSupa,
               variables: {

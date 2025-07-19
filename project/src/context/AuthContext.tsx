@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { User, Session } from '@supabase/supabase-js'
-import { supabase, type Profile } from '../lib/supabase'
+import { supabase, isSupabaseAvailable, type Profile } from '../lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -36,6 +36,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Only initialize auth if Supabase is available
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -61,6 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [])
 
   const fetchProfile = async (userId: string) => {
+    if (!supabase) return
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -80,6 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const createProfile = async (userId: string, email: string, fullName?: string) => {
+    if (!supabase) return
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -100,11 +108,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signInWithEmail = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Authentication not available')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
   }
 
   const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
+    if (!supabase) throw new Error('Authentication not available')
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
@@ -119,6 +129,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signInWithGoogle = async () => {
+    if (!supabase) throw new Error('Authentication not available')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -129,6 +140,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signInWithFacebook = async () => {
+    if (!supabase) throw new Error('Authentication not available')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: {
@@ -139,6 +151,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signOut = async () => {
+    if (!supabase) throw new Error('Authentication not available')
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   }

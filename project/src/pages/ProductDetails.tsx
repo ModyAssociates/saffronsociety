@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingCart, Heart, ChevronLeft, ChevronDown, ChevronUp, Package, Shield } from 'lucide-react'
-import { useCart } from '../context/CartContext'
-import { fetchProducts } from '../data/products'
-import type { Product } from '../services/printify'
-import type { CartItem } from '../types/cart'
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingCart, ArrowLeft, Heart, Package, Shield, ChevronUp, ChevronDown } from 'lucide-react';
+import { Product } from '../types';
+import { fetchProducts } from '../data/products';
+import { useCart } from '../context/CartContext';
 import placeholderImg from '../assets/logo_big.png'
 
 const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
@@ -243,7 +242,7 @@ const COLOR_NAME_TO_HEX: Record<string, string> = {
 const ProductDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { addToCart } = useCart()
+  const { addItem } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [mainImage, setMainImage] = useState<string>('')
@@ -256,15 +255,19 @@ const ProductDetails = () => {
     loadProduct()
   }, [id])
 
- async function loadProduct() {
+  async function loadProduct() {
     try {
       setLoading(true)
       const products = await fetchProducts()
       const found = products.find(p => p.id === id)
       if (found) {
         setProduct(found)
-        setMainImage(`/api/proxy-image?url=${encodeURIComponent(found.images[0] || placeholderImg)}`)
-        setSelectedColor(found.colors?.[0] || '')
+        // Handle different image formats
+        const firstImage = typeof found.image === 'string' 
+          ? found.image 
+          : found.image?.src || placeholderImg
+        setMainImage(firstImage)
+        setSelectedColor(found.colors?.[0]?.hex || found.colors?.[0]?.name || '')
       }
     } catch (error) {
       console.error('Failed to load product:', error)
@@ -276,13 +279,8 @@ const ProductDetails = () => {
   const handleAddToCart = () => {
     if (!product) return
     
-    const cartItem: CartItem = {
-      ...product,
-      selectedColor,
-      selectedSize,
-      quantity,
-    }
-    addToCart(cartItem)
+    // Add item to cart with correct parameters
+    addItem(product, selectedSize, selectedColor, quantity)
   }
 
   const toggleSection = (sectionId: string) => {
@@ -320,10 +318,10 @@ const ProductDetails = () => {
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-4">Product not found</h2>
           <button
-            onClick={() => navigate('/products')}
+            onClick={() => navigate('/shop')}
             className="text-orange-500 hover:text-orange-600 flex items-center gap-2 mx-auto"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" />
             Back to products
           </button>
         </div>
@@ -331,15 +329,20 @@ const ProductDetails = () => {
     )
   }
 
+  // Get all images for the product
+  const productImages = product.images && product.images.length > 0 
+    ? product.images.map(img => typeof img === 'string' ? img : img.src).filter(Boolean)
+    : [typeof product.image === 'string' ? product.image : product.image?.src || placeholderImg]
+
   return (
     <div className="min-h-screen py-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Back button */}
         <button
-          onClick={() => navigate('/products')}
+          onClick={() => navigate('/shop')}
           className="mb-6 text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" />
           Back to products
         </button>
 
@@ -359,27 +362,25 @@ const ProductDetails = () => {
               />
             </motion.div>
             
-            {/* Thumbnail Gallery with Scrollbar */}
-            {product.images.length > 1 && (
-              <div className="h-32 overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-4 gap-2 pr-2">
-                  {product.images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setMainImage(`/api/proxy-image?url=${encodeURIComponent(img)}`)}
-                      className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${
-                        mainImage.includes(encodeURIComponent(img)) ? 'border-orange-500' : 'border-transparent'
-                      }`}
-                    >
-                      <img
-                        src={`/api/proxy-image?url=${encodeURIComponent(img)}`}
-                        alt={`${product.name} view ${idx + 1}`}
-                        className="w-full h-full object-contain"
-                        onError={handleImageError}
-                      />
-                    </button>
-                  ))}
-                </div>
+            {/* Thumbnail Gallery */}
+            {productImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {productImages.slice(0, 8).map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setMainImage(img)}
+                    className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${
+                      mainImage === img ? 'border-orange-500' : 'border-transparent'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} view ${idx + 1}`}
+                      className="w-full h-full object-contain"
+                      onError={handleImageError}
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -396,17 +397,20 @@ const ProductDetails = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Color</h3>
                 <div className="flex flex-wrap gap-3">
-                  {product.colors.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-8 h-8 rounded-full border-2 transition-all ${
-                        selectedColor === color ? 'border-gray-800 scale-110' : 'border-gray-300'
-                      }`}
-                      style={{ backgroundColor: COLOR_NAME_TO_HEX[color] || color }}
-                      title={hexToName(color)}
-                    />
-                  ))}
+                  {product.colors.map((color) => {
+                    const colorValue = color.hex || color.name || color
+                    return (
+                      <button
+                        key={colorValue}
+                        onClick={() => setSelectedColor(colorValue)}
+                        className={`w-8 h-8 rounded-full border-2 transition-all ${
+                          selectedColor === colorValue ? 'border-gray-800 scale-110' : 'border-gray-300'
+                        }`}
+                        style={{ backgroundColor: color.hex || COLOR_NAME_TO_HEX[color.name] || color }}
+                        title={color.name || hexToName(colorValue)}
+                      />
+                    )
+                  })}
                 </div>
                 {selectedColor && (
                   <p className="text-sm text-gray-600 mt-2">
@@ -486,7 +490,7 @@ const ProductDetails = () => {
               </div>
             </div>
 
-            {/* Product Information Sections - Now under payment info */}
+            {/* Product Information Sections */}
             <div className="border-t pt-6">
               {getProductInfoSections(product).map((section) => (
                 <div key={section.id} className="border-b border-gray-200">

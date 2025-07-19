@@ -1,100 +1,51 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Twitter } from 'lucide-react';
 
-const Footer = () => {
+export default function Footer() {
   return (
-    <footer className="bg-maroon text-white mt-16">
-      <div className="container-custom py-12">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-          {/* About */}
-          <div className="md:col-span-2">
-            <h3 className="font-playfair text-xl mb-4">Saffron Society</h3>
-            <p className="mb-4 text-white/80">
-              Premium t-shirts featuring iconic vintage Bollywood designs.
-              Each piece celebrates the rich cultural heritage of Indian cinema.
-            </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-white hover:text-saffron transition-colors" aria-label="Instagram">
-                <Instagram size={20} />
-              </a>
-              <a href="#" className="text-white hover:text-saffron transition-colors" aria-label="Facebook">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="text-white hover:text-saffron transition-colors" aria-label="Twitter">
-                <Twitter size={20} />
-              </a>
-            </div>
-          </div>
-
-          {/* Quick Links */}
+    <footer className="bg-gray-900 text-white py-8 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="font-playfair text-xl mb-4">Quick Links</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-semibold mb-4">About Saffron Society</h3>
+            <p className="text-gray-400 text-sm">
+              Celebrating Bollywood's cult classics with unique t-shirt designs.
+            </p>
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/" className="text-white/80 hover:text-saffron transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-white/80 hover:text-saffron transition-colors">
+                <Link to="/shop" className="text-gray-400 hover:text-white transition">
                   Shop
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-white/80 hover:text-saffron transition-colors">
-                  About Us
+                <Link to="/about" className="text-gray-400 hover:text-white transition">
+                  About
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-white/80 hover:text-saffron transition-colors">
-                  Contact
+                <Link to="/account" className="text-gray-400 hover:text-white transition">
+                  My Account
                 </Link>
               </li>
             </ul>
           </div>
-
-          {/* Legal */}
+          
           <div>
-            <h3 className="font-playfair text-xl mb-4">Legal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/privacy" className="text-white/80 hover:text-saffron transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="text-white/80 hover:text-saffron transition-colors">
-                  Terms of Use
-                </Link>
-              </li>
-              <li>
-                <Link to="/shirt-quality" className="text-white/80 hover:text-saffron transition-colors">
-                  Quality Guarantee
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="font-playfair text-xl mb-4">Contact</h3>
-            <ul className="space-y-2">
-              <li className="text-white/80">
-                Email: support@saffronsociety.com
-              </li>
-              <li className="text-white/80">
-                Ontario, Canada
-              </li>
-            </ul>
+            <h3 className="text-lg font-semibold mb-4">Contact</h3>
+            <p className="text-gray-400 text-sm">
+              Email: hello@saffronsociety.com
+            </p>
           </div>
         </div>
-
-        <div className="border-t border-white/20 mt-8 pt-8 text-center">
-          <p className="text-white/80">© 2025 Saffron Society. All rights reserved.</p>
+        
+        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
+          <p>&copy; 2024 Saffron Society. All rights reserved.</p>
         </div>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}
