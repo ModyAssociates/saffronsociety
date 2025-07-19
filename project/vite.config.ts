@@ -1,30 +1,21 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
-    port: 5174,
-    proxy: {
-      '/.netlify/functions': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
   resolve: {
     alias: {
-      // Redirect Emotion's CJS call to an ESM module on esm.sh:
-      '@emotion/is-prop-valid': 'https://esm.sh/is-prop-valid',
+      '@': path.resolve(__dirname, './src'),
     },
   },
-  optimizeDeps: {
-    include: ['https://esm.sh/is-prop-valid'],
+  server: {
+    port: 5174,
+    host: true,
   },
   build: {
-    commonjsOptions: {
-      include: [/node_modules/, /@emotion\/is-prop-valid/],
-    },
+    outDir: 'dist',
+    sourcemap: true,
   },
 })

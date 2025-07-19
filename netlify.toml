@@ -6,40 +6,20 @@
   functions = "netlify/functions"
 
 [dev]
-  command = "npm run dev"
+  command = "cd project && npm run dev"
   targetPort = 5174
   port = 3000
   publish = "project/dist"
-  functions = "netlify/functions"
   autoLaunch = false
-  framework = "#custom"
-
-[[redirects]]
-  from = "/api/proxy-image"
-  to = "/.netlify/functions/proxy-image"
-  status = 200
 
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[build.environment]
-  NODE_VERSION = "20"
-  PRINTIFY_API_TOKEN = "${PRINTIFY_API_TOKEN}"
-  PRINTIFY_SHOP_ID = "${PRINTIFY_SHOP_ID}"
-  SUPABASE_URL = "${SUPABASE_URL}"
-  SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}"
-  SUPABASE_SERVICE_ROLE_KEY = "${SUPABASE_SERVICE_ROLE_KEY}"
-
-[dev.environment]
-  PRINTIFY_API_TOKEN = "${PRINTIFY_API_TOKEN}"
-  PRINTIFY_SHOP_ID = "${PRINTIFY_SHOP_ID}"
-  SUPABASE_URL = "${SUPABASE_URL}"
-  SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}"
-  SUPABASE_SERVICE_ROLE_KEY = "${SUPABASE_SERVICE_ROLE_KEY}"
+[functions]
+  node_bundler = "esbuild"
+  
+[context.production.environment]
+  PRINTIFY_API_TOKEN = "YOUR_PRINTIFY_API_TOKEN"
+  PRINTIFY_SHOP_ID = "YOUR_PRINTIFY_SHOP_ID"

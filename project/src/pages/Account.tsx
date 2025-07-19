@@ -1,14 +1,13 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { User, Package, LogOut, AlertCircle } from 'lucide-react'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase, isSupabaseAvailable } from '../lib/supabase'
-import { User, LogOut, Package, AlertCircle } from 'lucide-react'
 
 const Account = () => {
   const { user, profile, signOut, loading } = useAuth()
-  const navigate = useNavigate()
   const [signingOut, setSigningOut] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
 
@@ -16,7 +15,6 @@ const Account = () => {
     try {
       setSigningOut(true)
       await signOut()
-      navigate('/')
     } catch (error) {
       console.error('Error signing out:', error)
     } finally {
@@ -92,56 +90,62 @@ const Account = () => {
   }
 
   return (
-    <div className="min-h-screen py-16">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold">My Account</h1>
-            <button
-              onClick={handleSignOut}
-              disabled={signingOut}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
-            >
-              <LogOut className="w-5 h-5" />
-              {signingOut ? 'Signing out...' : 'Sign Out'}
-            </button>
-          </div>
-
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.full_name || 'User avatar'}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-orange-600" />
-                )}
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold">
-                  {profile?.full_name || 'Customer'}
-                </h2>
-                <p className="text-gray-600">{user.email}</p>
-                {profile?.role === 'admin' && (
-                  <span className="inline-block mt-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
-                    Admin
-                  </span>
-                )}
-              </div>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
+              <button
+                onClick={handleSignOut}
+                disabled={signingOut}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
+              >
+                <LogOut className="w-5 h-5" />
+                {signingOut ? 'Signing out...' : 'Sign Out'}
+              </button>
             </div>
 
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Order History
-              </h3>
-              <p className="text-gray-600">No orders yet. Start shopping!</p>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.full_name || 'User avatar'}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-orange-600" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    {profile?.full_name || 'Customer'}
+                  </h2>
+                  <p className="text-gray-600">{user.email}</p>
+                  {profile?.role === 'admin' && (
+                    <span className="inline-block mt-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
+                      Admin
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Order History
+                </h3>
+                <p className="text-gray-600">No orders yet. Start shopping!</p>
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   )

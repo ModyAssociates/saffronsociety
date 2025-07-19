@@ -22,12 +22,26 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('cart');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('cart');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Ensure we return an array
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error);
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
+    try {
+      localStorage.setItem('cart', JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving cart to localStorage:', error);
+    }
   }, [items]);
 
   const addItem = (product: Product, size: string, color: string, quantity: number = 1) => {
@@ -79,8 +93,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   };
 
-  const total = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  // Calculate total with safety check
+  const total = Array.isArray(items) 
+    ? items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+    : 0;
+  
+  // Calculate item count with safety check
+  const itemCount = Array.isArray(items)
+    ? items.reduce((sum, item) => sum + item.quantity, 0)
+    : 0;
 
   return (
     <CartContext.Provider value={{

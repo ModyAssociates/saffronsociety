@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
+import { ArrowLeft } from 'lucide-react';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, total, clearCart } = useCart();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -19,8 +21,11 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would normally process the payment
-    // For now, we'll just simulate a successful order
+    setLoading(true);
+    
+    // Simulate order processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     clearCart();
     navigate('/order-confirmation');
   };
@@ -32,19 +37,36 @@ export default function Checkout() {
     });
   };
 
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
+          <button
+            onClick={() => navigate('/shop')}
+            className="text-orange-500 hover:text-orange-600 flex items-center gap-2 mx-auto"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Continue shopping
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-12">
           {/* Checkout Form */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
+              <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
               
               <div className="space-y-4">
                 <div>
@@ -57,7 +79,7 @@ export default function Checkout() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
 
@@ -72,7 +94,7 @@ export default function Checkout() {
                       required
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -85,7 +107,7 @@ export default function Checkout() {
                       required
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
@@ -100,7 +122,7 @@ export default function Checkout() {
                     required
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
 
@@ -115,7 +137,7 @@ export default function Checkout() {
                       required
                       value={formData.city}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -128,7 +150,7 @@ export default function Checkout() {
                       required
                       value={formData.state}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
@@ -143,15 +165,16 @@ export default function Checkout() {
                     required
                     value={formData.zipCode}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-yellow-500 text-gray-900 font-semibold py-3 rounded hover:bg-yellow-400 transition duration-300"
+                  disabled={loading}
+                  className="w-full bg-orange-500 text-white font-semibold py-3 rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Place Order
+                  {loading ? 'Processing...' : 'Place Order'}
                 </button>
               </div>
             </form>
@@ -167,10 +190,11 @@ export default function Checkout() {
             <div className="space-y-3 mb-4">
               {items.map((item) => (
                 <div key={`${item.product.id}-${item.selectedSize}-${item.selectedColor}`} className="flex justify-between text-sm">
-                  <span>
-                    {item.product.name} x {item.quantity}
+                  <span className="flex-1">
+                    {item.product.name} ({item.selectedSize})
+                    <span className="text-gray-500 block">Qty: {item.quantity}</span>
                   </span>
-                  <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                  <span className="font-medium">${(item.product.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
