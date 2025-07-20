@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { User, Session } from '@supabase/supabase-js'
-import { supabase, isSupabaseAvailable, type Profile } from '../lib/supabase'
+import { supabase, type Profile } from '../lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -42,24 +42,81 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
+    const initializeAuth = async () => {
+      try {
+        console.log('🔥 Initializing auth...')
+        
+        // First, try to get the session from Supabase
+        // This will handle OAuth tokens in the URL automatically
+        if (!supabase) {
+          setLoading(false)
+          return
+        }
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('🔥 Error getting session:', error)
+          // Check if we have OAuth error in URL
+          if (window.location.hash.includes('error=')) {
+            const params = new URLSearchParams(window.location.hash.substring(1))
+            const errorCode = params.get('error')
+            const errorDescription = params.get('error_description')
+            console.error('🔥 OAuth error:', errorCode, errorDescription)
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname)
+          }
+        } else if (session) {
+          console.log('🔥 Session found:', session)
+          setSession(session)
+          setUser(session.user)
+          await fetchProfile(session.user.id)
+          
+          // If we have OAuth tokens in URL, clean them up
+          if (window.location.hash.includes('access_token')) {
+            console.log('🔥 Cleaning OAuth tokens from URL...')
+            window.history.replaceState({}, document.title, window.location.pathname)
+          }
+        } else {
+          console.log('🔥 No session found')
+        }
+        
+        setLoading(false)
+      } catch (error) {
+        console.error('🔥 Error initializing auth:', error)
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    // Initialize auth
+    initializeAuth()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔥 Auth state change:', event)
+      
+      if (event === 'SIGNED_IN' && session) {
+        console.log('🔥 User signed in:', session.user)
+        setSession(session)
+        setUser(session.user)
         await fetchProfile(session.user.id)
-      } else {
+        
+        // Clean up URL if we have OAuth tokens
+        if (window.location.hash.includes('access_token')) {
+          console.log('🔥 Cleaning OAuth tokens from URL after sign in...')
+          window.history.replaceState({}, document.title, '/account')
+        }
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🔥 User signed out')
+        setSession(null)
+        setUser(null)
         setProfile(null)
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('🔥 Token refreshed')
+        setSession(session)
+      } else if (event === 'USER_UPDATED' && session) {
+        console.log('🔥 User updated:', session.user)
+        setUser(session.user)
+        await fetchProfile(session.user.id)
       }
     })
 
@@ -130,21 +187,61 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signInWithGoogle = async () => {
     if (!supabase) throw new Error('Authentication not available')
+    
+    // Get the correct redirect URL based on environment
+    let redirectUrl = window.location.origin
+    
+    // Check if we're in GitHub Codespaces
+    if (window.location.hostname.includes('github.dev')) {
+      // In Codespaces, we need to construct the preview URL correctly
+      const codespaceId = window.location.hostname.split('.')[0]
+      redirectUrl = `https://${codespaceId}-5174.app.github.dev`
+    } else if (window.location.hostname === 'localhost') {
+      // For local development
+      redirectUrl = `http://localhost:${window.location.port || '5174'}`
+    }
+    
+    // Append /account to the redirect URL
+    redirectUrl = `${redirectUrl}/account`
+    
+    console.log('🔥 Starting Google OAuth with redirect to:', redirectUrl)
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/account`
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
       }
     })
-    if (error) throw error
+    
+    if (error) {
+      console.error('🔥 Google OAuth error:', error)
+      throw error
+    }
   }
 
   const signInWithFacebook = async () => {
     if (!supabase) throw new Error('Authentication not available')
+    
+    // Use the same redirect URL logic
+    let redirectUrl = window.location.origin
+    
+    if (window.location.hostname.includes('github.dev')) {
+      const codespaceId = window.location.hostname.split('.')[0]
+      redirectUrl = `https://${codespaceId}-5174.app.github.dev`
+    } else if (window.location.hostname === 'localhost') {
+      redirectUrl = `http://localhost:${window.location.port || '5174'}`
+    }
+    
+    redirectUrl = `${redirectUrl}/account`
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: {
-        redirectTo: `${window.location.origin}/account`
+        redirectTo: redirectUrl
       }
     })
     if (error) throw error

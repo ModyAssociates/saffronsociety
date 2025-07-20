@@ -79,7 +79,7 @@ const Account = () => {
                 },
               },
             }}
-            providers={['google']} // Remove Facebook until it's configured
+            providers={['google']}
             redirectTo={`${window.location.origin}/account`}
             onlyThirdPartyProviders={false}
             view="sign_in"

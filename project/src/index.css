@@ -75,6 +75,10 @@
     @apply bg-gradient-to-br from-orange-100 via-yellow-50 to-orange-200;
   }
   
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+  
   .bg-paisley {
     background-image: radial-gradient(circle at 1px 1px, rgba(255,165,0,0.3) 1px, transparent 0);
     background-size: 20px 20px;
@@ -190,4 +194,14 @@
   body {
     @apply text-black bg-white;
   }
+}
+
+/* Add smooth gradient transitions */
+.gradient-smooth {
+  background: linear-gradient(
+    to bottom,
+    #fff3e0 0%,
+    #ffe4cc 50%,
+    #fff0e5 100%
+  );
 }

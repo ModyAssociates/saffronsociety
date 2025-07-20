@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -11,7 +10,9 @@ import CartPage from './pages/CartPage';
 import Checkout from './pages/CheckoutPage';
 import About from './pages/About';
 import Account from './pages/Account';
+import Admin from './pages/Admin';
 import OrderConfirmation from './pages/OrderConfirmation';
+import AuthCallback from './pages/AuthCallback';
 
 function App() {
   return (
@@ -29,7 +30,9 @@ function App() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/account" element={<Account />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
               </Routes>
             </main>
             <Footer />

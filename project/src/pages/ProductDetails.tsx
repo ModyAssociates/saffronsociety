@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ArrowLeft, Heart, Package, Shield, ChevronUp, ChevronDown } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Heart, Package, Shield, ChevronDown } from 'lucide-react';
 import { Product } from '../types';
 import { fetchProducts } from '../data/products';
 import { useCart } from '../context/CartContext';
@@ -329,18 +329,21 @@ const ProductDetails = () => {
     )
   }
 
-  // Get all images for the product
-  const productImages = product.images && product.images.length > 0 
-    ? product.images.map(img => typeof img === 'string' ? img : img.src).filter(Boolean)
-    : [typeof product.image === 'string' ? product.image : product.image?.src || placeholderImg]
+  // Get the main product image
+  const mainImageSrc = typeof product.image === 'string' 
+    ? product.image 
+    : product.image?.src || placeholderImg
+
+  // For now, we only have one image per product
+  const productImages = [mainImageSrc]
 
   return (
-    <div className="min-h-screen py-8 px-4 md:px-8">
+    <div className="min-h-screen py-8 px-4 md:px-8 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
       <div className="max-w-7xl mx-auto">
         {/* Back button */}
         <button
           onClick={() => navigate('/shop')}
-          className="mb-6 text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors"
+          className="mb-6 text-gray-700 hover:text-orange-600 flex items-center gap-2 transition-colors font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to products
@@ -350,27 +353,45 @@ const ProductDetails = () => {
           {/* Image Gallery */}
           <div className="space-y-4">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="aspect-square bg-gray-100 rounded-lg overflow-hidden"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="relative aspect-square bg-white/70 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/40 shadow-xl"
             >
+              {/* Radial gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-orange-100/30 pointer-events-none" />
+              
+              {/* Cinema badge */}
+              <div className="absolute top-4 left-4 z-10">
+                <div className="bg-black/80 backdrop-blur-md text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider border border-amber-400/30">
+                  CULT CLASSICS
+                </div>
+              </div>
+              
               <img
                 src={mainImage}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain relative z-10"
                 onError={handleImageError}
               />
+              
+              {/* Subtle glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-t from-orange-200/20 via-transparent to-transparent pointer-events-none" />
             </motion.div>
             
             {/* Thumbnail Gallery */}
             {productImages.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {productImages.slice(0, 8).map((img, idx) => (
-                  <button
+              <div className="grid grid-cols-4 gap-3">
+                {productImages.slice(0, 8).map((img: string, idx: number) => (
+                  <motion.button
                     key={idx}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setMainImage(img)}
-                    className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${
-                      mainImage === img ? 'border-orange-500' : 'border-transparent'
+                    className={`aspect-square bg-white/60 backdrop-blur-md rounded-xl overflow-hidden border-2 transition-all shadow-lg ${
+                      mainImage === img 
+                        ? 'border-orange-400 shadow-orange-200/50' 
+                        : 'border-white/40 hover:border-orange-300/60'
                     }`}
                   >
                     <img
@@ -379,7 +400,7 @@ const ProductDetails = () => {
                       className="w-full h-full object-contain"
                       onError={handleImageError}
                     />
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             )}
@@ -387,124 +408,163 @@ const ProductDetails = () => {
 
           {/* Product Info */}
           <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{decodeHTMLEntities(product.name)}</h1>
-              <p className="text-2xl font-semibold text-orange-600">${product.price.toFixed(2)}</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/40 shadow-xl"
+            >
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
+                  {decodeHTMLEntities(product.name)}
+                </h1>
+                <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                  ${product.price.toFixed(2)}
+                </p>
+              </div>
 
-            {/* Color Selection */}
-            {product.colors && product.colors.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Color</h3>
-                <div className="flex flex-wrap gap-3">
-                  {product.colors.map((color) => {
-                    const colorValue = color.hex || color.name || color
-                    return (
-                      <button
-                        key={colorValue}
-                        onClick={() => setSelectedColor(colorValue)}
-                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          selectedColor === colorValue ? 'border-gray-800 scale-110' : 'border-gray-300'
-                        }`}
-                        style={{ backgroundColor: color.hex || COLOR_NAME_TO_HEX[color.name] || color }}
-                        title={color.name || hexToName(colorValue)}
-                      />
-                    )
-                  })}
+              {/* Color Selection */}
+              {product.colors && product.colors.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Color</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {product.colors.map((color) => {
+                      const colorValue = typeof color === 'string' ? color : (color.hex || color.name)
+                      const colorHex = typeof color === 'string' 
+                        ? COLOR_NAME_TO_HEX[color] || color
+                        : color.hex || COLOR_NAME_TO_HEX[color.name] || color.name
+                      const colorName = typeof color === 'string' ? color : color.name
+                      
+                      return (
+                        <motion.button
+                          key={colorValue}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setSelectedColor(colorValue)}
+                          className={`w-10 h-10 rounded-full border-3 transition-all shadow-lg ${
+                            selectedColor === colorValue 
+                              ? 'border-gray-800 shadow-lg' 
+                              : 'border-white/60 hover:border-gray-400'
+                          }`}
+                          style={{ backgroundColor: colorHex }}
+                          title={colorName || hexToName(colorValue)}
+                        />
+                      )
+                    })}
+                  </div>
+                  {selectedColor && (
+                    <p className="text-sm text-gray-600 mt-3 font-medium">
+                      Selected: {hexToName(selectedColor)}
+                    </p>
+                  )}
                 </div>
-                {selectedColor && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    Selected: {hexToName(selectedColor)}
-                  </p>
-                )}
-              </div>
-            )}
+              )}
 
-            {/* Size Selection */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Size</h3>
-              <div className="grid grid-cols-4 gap-2">
-                {AVAILABLE_SIZES.map(size => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`py-2 px-4 border rounded-lg transition-colors ${
-                      selectedSize === size
-                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
+              {/* Size Selection */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Size</h3>
+                <div className="grid grid-cols-4 gap-3">
+                  {AVAILABLE_SIZES.map(size => (
+                    <motion.button
+                      key={size}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedSize(size)}
+                      className={`py-3 px-4 border-2 rounded-xl font-semibold transition-all ${
+                        selectedSize === size
+                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-lg'
+                          : 'border-white/60 bg-white/50 hover:border-orange-300 hover:bg-orange-50/50'
+                      }`}
+                    >
+                      {size}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Quantity</h3>
+                <div className="flex items-center gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-12 h-12 rounded-xl border-2 border-white/60 bg-white/50 hover:border-orange-300 hover:bg-orange-50/50 flex items-center justify-center transition-all font-bold text-lg"
                   >
-                    {size}
-                  </button>
-                ))}
+                    -
+                  </motion.button>
+                  <span className="w-16 text-center font-bold text-xl">{quantity}</span>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-12 h-12 rounded-xl border-2 border-white/60 bg-white/50 hover:border-orange-300 hover:bg-orange-50/50 flex items-center justify-center transition-all font-bold text-lg"
+                  >
+                    +
+                  </motion.button>
+                </div>
               </div>
-            </div>
 
-            {/* Quantity */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Quantity</h3>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-lg border border-gray-300 hover:border-gray-400 flex items-center justify-center transition-colors"
+              {/* Add to Cart & Wishlist */}
+              <div className="flex gap-4 mb-6">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAddToCart}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 px-6 rounded-xl font-bold hover:from-orange-600 hover:to-red-600 transition-all flex items-center justify-center gap-3 shadow-lg text-lg"
                 >
-                  -
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-lg border border-gray-300 hover:border-gray-400 flex items-center justify-center transition-colors"
+                  <ShoppingCart className="w-5 h-5" />
+                  Add to Cart
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-4 border-2 border-white/60 bg-white/50 rounded-xl hover:border-red-300 hover:bg-red-50/50 transition-all"
                 >
-                  +
-                </button>
+                  <Heart className="w-6 h-6" />
+                </motion.button>
               </div>
-            </div>
 
-            {/* Add to Cart & Wishlist */}
-            <div className="flex gap-4">
-              <button
-                onClick={handleAddToCart}
-                className="flex-1 bg-orange-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                Add to Cart
-              </button>
-              <button className="p-3 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
-                <Heart className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Return Policy */}
-            <div className="border-t pt-6 space-y-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Package className="w-4 h-4" />
-                <span>30 days return policy.</span>
-                <a href="/terms" className="text-orange-500 hover:text-orange-600 underline">
-                  See details
-                </a>
+              {/* Return Policy */}
+              <div className="border-t border-white/40 pt-6 space-y-4">
+                <div className="flex items-center gap-3 text-sm text-gray-700 font-medium">
+                  <Package className="w-5 h-5 text-orange-500" />
+                  <span>30 days return policy.</span>
+                  <a href="/terms" className="text-orange-600 hover:text-orange-700 underline font-semibold">
+                    See details
+                  </a>
+                </div>
+                
+                <div className="flex items-center gap-3 text-sm text-gray-700 font-medium">
+                  <Shield className="w-5 h-5 text-green-500" />
+                  <span>Secure payments accepted</span>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Shield className="w-4 h-4" />
-                <span>Secure payments accepted</span>
-              </div>
-            </div>
+            </motion.div>
 
             {/* Product Information Sections */}
-            <div className="border-t pt-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white/70 backdrop-blur-lg rounded-2xl border border-white/40 shadow-xl overflow-hidden"
+            >
               {getProductInfoSections(product).map((section) => (
-                <div key={section.id} className="border-b border-gray-200">
-                  <button
+                <div key={section.id} className="border-b border-white/30 last:border-b-0">
+                  <motion.button
+                    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                     onClick={() => toggleSection(section.id)}
-                    className="w-full py-4 px-0 flex items-center justify-between text-left hover:text-orange-600 transition-colors"
+                    className="w-full py-5 px-6 flex items-center justify-between text-left hover:text-orange-600 transition-colors"
                   >
-                    <h2 className="text-lg font-semibold">{section.title}</h2>
-                    {expandedSections.has(section.id) ? (
-                      <ChevronUp className="w-5 h-5" />
-                    ) : (
+                    <h2 className="text-lg font-bold">{section.title}</h2>
+                    <motion.div
+                      animate={{ rotate: expandedSections.has(section.id) ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <ChevronDown className="w-5 h-5" />
-                    )}
-                  </button>
+                    </motion.div>
+                  </motion.button>
                   
                   <AnimatePresence>
                     {expandedSections.has(section.id) && (
@@ -515,7 +575,7 @@ const ProductDetails = () => {
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
-                        <div className="pb-4 text-gray-700">
+                        <div className="pb-6 px-6 text-gray-700">
                           {section.id === 'about' && section.content && typeof section.content === 'object' && 'designTitle' in section.content && (
                             <div className="space-y-4">
                               <div>
@@ -604,7 +664,7 @@ const ProductDetails = () => {
                   </AnimatePresence>
                 </div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

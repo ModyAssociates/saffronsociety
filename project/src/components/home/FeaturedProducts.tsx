@@ -2,21 +2,32 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import ProductCard from '../product/ProductCard'
-import { getFeaturedProducts } from '../../data/products'
-import type { Product } from '../../services/printify'
+import { fetchPrintifyProducts } from '../../services/printify'
+import type { Product } from '../../types'
 
-const FeaturedProducts = () => {
+interface FeaturedProductsProps {
+  products?: Product[];
+  loading?: boolean;
+}
+
+const FeaturedProducts = ({ products: propProducts, loading: propLoading }: FeaturedProductsProps) => {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (propProducts !== undefined) {
+      setProducts(propProducts);
+      setLoading(propLoading || false);
+      return;
+    }
+
     const loadProducts = async () => {
       try {
         setLoading(true)
         setError(null)
-        const featured = await getFeaturedProducts(6)
-        setProducts(featured)
+        const featured = await fetchPrintifyProducts()
+        setProducts(featured.slice(0, 6)) // Take first 6 as featured
       } catch (err) {
         console.error('Failed to load featured products:', err)
         setError('Failed to load featured products. Please check your API configuration.')
@@ -25,7 +36,7 @@ const FeaturedProducts = () => {
       }
     }
     loadProducts()
-  }, [])
+  }, [propProducts, propLoading])
 
   if (loading) {
     return (
@@ -135,8 +146,6 @@ const FeaturedProducts = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
             {products.map((product, index) => {
               const isFeatured = index === 0
-              const isBestSeller = index < 2
-              const isNew = index < 3
               
               return (
                 <motion.div
@@ -149,10 +158,6 @@ const FeaturedProducts = () => {
                 >
                   <ProductCard
                     product={product}
-                    index={index}
-                    isBestSeller={isBestSeller}
-                    isNew={isNew}
-                    featured={isFeatured}
                   />
                 </motion.div>
               )
