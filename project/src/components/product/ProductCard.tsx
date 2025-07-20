@@ -80,6 +80,42 @@ export default function ProductCard({ product }: ProductCardProps) {
             <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-orange-700 transition-colors duration-200 uppercase tracking-wide h-10 leading-tight flex items-start">
               {product.name}
             </h3>
+            
+            {/* Color Swatches */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {product.colors.slice(0, 6).map((color, index) => (
+                  <motion.div
+                    key={index}
+                    className="w-6 h-6 rounded-full border-2 border-white shadow-sm cursor-pointer relative group/swatch"
+                    style={{ backgroundColor: color.hex }}
+                    whileHover={{ scale: 1.2, zIndex: 10 }}
+                    whileTap={{ scale: 0.9 }}
+                    title={color.name}
+                  >
+                    {/* Color name tooltip */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/swatch:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20 pointer-events-none">
+                      {color.name}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                    </div>
+                    
+                    {/* Inner circle for better visibility on light colors */}
+                    <div 
+                      className="absolute inset-1 rounded-full border border-black/10"
+                      style={{ 
+                        borderColor: color.hex === '#FFFFFF' || color.hex === '#F7E1B0' ? '#00000020' : 'transparent' 
+                      }}
+                    ></div>
+                  </motion.div>
+                ))}
+                {product.colors.length > 6 && (
+                  <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center text-xs font-bold text-gray-600">
+                    +{product.colors.length - 6}
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="flex items-center justify-between mt-auto">
               <p className="text-2xl font-black text-orange-600">
                 ${firstVariant?.price || product.price}

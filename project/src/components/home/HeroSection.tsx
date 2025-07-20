@@ -79,6 +79,41 @@ const HeroSection: React.FC = () => {
                         {latestProduct.name}
                       </h3>
                       
+                      {/* Color Swatches */}
+                      {latestProduct.colors && latestProduct.colors.length > 0 && (
+                        <div className="flex justify-center gap-1 mb-2">
+                          {latestProduct.colors.slice(0, 4).map((color, index) => (
+                            <motion.div
+                              key={index}
+                              className="w-5 h-5 rounded-full border-2 border-white shadow-sm cursor-pointer relative group/swatch"
+                              style={{ backgroundColor: color.hex }}
+                              whileHover={{ scale: 1.3, zIndex: 10 }}
+                              whileTap={{ scale: 0.9 }}
+                              title={color.name}
+                            >
+                              {/* Color name tooltip */}
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/swatch:opacity-100 transition-opacity duration-200 whitespace-nowrap z-30 pointer-events-none">
+                                {color.name}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                              </div>
+                              
+                              {/* Inner circle for better visibility on light colors */}
+                              <div 
+                                className="absolute inset-1 rounded-full border border-black/10"
+                                style={{ 
+                                  borderColor: color.hex === '#FFFFFF' || color.hex === '#F7E1B0' ? '#00000020' : 'transparent' 
+                                }}
+                              ></div>
+                            </motion.div>
+                          ))}
+                          {latestProduct.colors.length > 4 && (
+                            <div className="w-5 h-5 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center text-xs font-bold text-gray-600">
+                              +{latestProduct.colors.length - 4}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex items-center justify-center space-x-2 mb-2">
                         <span className="text-xl font-black text-orange-600">
                           ${latestProduct.price}

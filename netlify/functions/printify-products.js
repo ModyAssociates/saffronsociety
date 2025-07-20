@@ -29,74 +29,96 @@ export default async (req, context) => {
       const mockProducts = [
         {
           id: "1",
-          name: "Mogambo Khush Hua Tee",
+          title: "Baazigar (1993) - Classic Bollywood Thriller",
+          name: "Baazigar (1993) - Classic Bollywood Thriller",
           description: "Channel the iconic villain energy with this legendary Bollywood design featuring the unforgettable Mogambo character.",
-          price: 24.99,
+          price: 21.37,
           image: "/assets/male-model.png",
+          images: ["/assets/male-model.png"],
           category: "T-Shirts",
-          tags: ["bollywood", "villain", "classic", "mogambo"],
+          tags: ["bollywood", "thriller", "classic", "baazigar"],
           sizes: ["S", "M", "L", "XL", "XXL"],
           colors: [
             { name: "Black", hex: "#000000" },
-            { name: "White", hex: "#FFFFFF" }
+            { name: "White", hex: "#FFFFFF" },
+            { name: "Navy", hex: "#1A2237" },
+            { name: "Forest", hex: "#223B26" }
           ],
           variants: [
-            { id: "v1", title: "Black / S", price: 24.99, is_enabled: true },
-            { id: "v2", title: "Black / M", price: 24.99, is_enabled: true }
+            { id: "v1", title: "Black / S", price: 21.37, is_enabled: true },
+            { id: "v2", title: "Black / M", price: 21.37, is_enabled: true },
+            { id: "v3", title: "White / S", price: 21.37, is_enabled: true },
+            { id: "v4", title: "Navy / S", price: 21.37, is_enabled: true }
           ]
         },
         {
           id: "2", 
-          name: "Mere Paas Maa Hai Tee",
+          title: "Mere Paas Maa Hai - Emotional Classic",
+          name: "Mere Paas Maa Hai - Emotional Classic",
           description: "The ultimate emotional dialogue from Bollywood history - a tribute to mother's love and family values in iconic cinema.",
           price: 24.99,
           image: "/assets/female-model.png",
+          images: ["/assets/female-model.png"],
           category: "T-Shirts", 
           tags: ["bollywood", "emotional", "family", "classic"],
           sizes: ["S", "M", "L", "XL", "XXL"],
           colors: [
-            { name: "Navy", hex: "#000080" },
-            { name: "Gray", hex: "#808080" }
+            { name: "Navy", hex: "#1A2237" },
+            { name: "Maroon", hex: "#642838" },
+            { name: "Ice Grey", hex: "#DCD2BE" },
+            { name: "Royal", hex: "#274D91" }
           ],
           variants: [
             { id: "v3", title: "Navy / S", price: 24.99, is_enabled: true },
-            { id: "v4", title: "Navy / M", price: 24.99, is_enabled: true }
+            { id: "v4", title: "Navy / M", price: 24.99, is_enabled: true },
+            { id: "v5", title: "Maroon / S", price: 24.99, is_enabled: true }
           ]
         },
         {
           id: "3",
-          name: "Sholay Heroes Tribute",
+          title: "Sholay Heroes Tribute - Friendship Forever",
+          name: "Sholay Heroes Tribute - Friendship Forever",
           description: "Celebrate the friendship and heroism of Bollywood's greatest duo in this artistic tribute to the timeless classic Sholay.",
           price: 26.99,
-          image: "/assets/male-model-2.png", 
+          image: "/assets/male-model-2.png",
+          images: ["/assets/male-model-2.png"], 
           category: "T-Shirts",
           tags: ["sholay", "friendship", "heroes", "classic"],
           sizes: ["S", "M", "L", "XL", "XXL"],
           colors: [
             { name: "Maroon", hex: "#642838" },
-            { name: "Forest", hex: "#223B26" }
+            { name: "Forest", hex: "#223B26" },
+            { name: "Dark Chocolate", hex: "#31221D" },
+            { name: "Cherry Red", hex: "#A82235" }
           ],
           variants: [
             { id: "v5", title: "Maroon / S", price: 26.99, is_enabled: true },
-            { id: "v6", title: "Maroon / M", price: 26.99, is_enabled: true }
+            { id: "v6", title: "Maroon / M", price: 26.99, is_enabled: true },
+            { id: "v7", title: "Forest / S", price: 26.99, is_enabled: true }
           ]
         },
         {
           id: "4",
-          name: "Vintage Cinema Magic",
+          title: "Vintage Cinema Magic - Golden Age",
+          name: "Vintage Cinema Magic - Golden Age",
           description: "A nostalgic design celebrating the golden age of Indian cinema with artistic elements and retro typography.",
           price: 28.99,
           image: "/assets/male-model-3.png",
+          images: ["/assets/male-model-3.png"],
           category: "T-Shirts",
           tags: ["vintage", "cinema", "retro", "golden-age"],
           sizes: ["S", "M", "L", "XL", "XXL"],
           colors: [
             { name: "Royal", hex: "#274D91" },
-            { name: "Cherry Red", hex: "#A82235" }
+            { name: "Cherry Red", hex: "#A82235" },
+            { name: "Vegas Gold", hex: "#F7E1B0" },
+            { name: "Azalea", hex: "#FF8E9D" },
+            { name: "Galapagos Blue", hex: "#005C70" }
           ],
           variants: [
             { id: "v7", title: "Royal / S", price: 28.99, is_enabled: true },
-            { id: "v8", title: "Royal / M", price: 28.99, is_enabled: true }
+            { id: "v8", title: "Royal / M", price: 28.99, is_enabled: true },
+            { id: "v9", title: "Cherry Red / S", price: 28.99, is_enabled: true }
           ]
         }
       ];
@@ -131,17 +153,24 @@ export default async (req, context) => {
 
     // Transform Printify products to our format
     const products = data.data?.map(product => {
-      // Extract colors from variants
+      console.log('[printify-products] Processing product:', product.title);
+      
+      // Extract colors from variant titles since Printify doesn't provide color options separately
       const colorSet = new Set();
       const colorMap = {};
       
+      // Look through all variants and extract color names from titles
       product.variants?.forEach(variant => {
-        if (variant.is_enabled && variant.options) {
-          const colorOption = variant.options.find(opt => opt.type === 'color');
-          if (colorOption) {
-            colorSet.add(colorOption.value);
-            if (!colorMap[colorOption.value]) {
-              colorMap[colorOption.value] = colorOption.hex || '#000000';
+        if (variant.is_enabled && variant.title) {
+          // Extract color from variant title (format is usually "Color / Size")
+          const parts = variant.title.split(' / ');
+          if (parts.length >= 2) {
+            const colorName = parts[0].trim();
+            if (colorName && colorName !== '') {
+              colorSet.add(colorName);
+              if (!colorMap[colorName]) {
+                colorMap[colorName] = mapColorNameToHex(colorName);
+              }
             }
           }
         }
@@ -154,16 +183,78 @@ export default async (req, context) => {
 
       // Get the first available image
       const firstImage = product.images?.[0]?.src || '/assets/logo_big.png';
+      
+      // Calculate price - get the minimum price from enabled variants
+      let minPrice = 24.99;
+      if (product.variants && product.variants.length > 0) {
+        const enabledVariants = product.variants.filter(v => v.is_enabled);
+        if (enabledVariants.length > 0) {
+          const prices = enabledVariants.map(v => parseFloat(v.price) / 100);
+          minPrice = Math.min(...prices);
+        }
+      }
 
-      return {
+      const transformedProduct = {
         id: product.id,
+        title: product.title,
         name: product.title,
-        price: product.variants?.[0]?.price ? parseFloat(product.variants[0].price) / 100 : 24.99,
+        description: product.description || 'A stylish Bollywood-inspired t-shirt design',
+        price: minPrice,
         image: firstImage,
+        images: product.images?.map(img => img.src) || [firstImage],
         colors,
+        category: 'T-Shirts',
+        tags: Array.isArray(product.tags) ? product.tags : ['bollywood', 'vintage'],
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
         variants: product.variants?.filter(v => v.is_enabled) || []
       };
+      
+      console.log('[printify-products] Transformed product colors for', product.title, ':', colors);
+      return transformedProduct;
     }) || [];
+    
+    // Helper function to map color names to hex codes
+    function mapColorNameToHex(colorName) {
+      const colorMapping = {
+        'Black': '#000000',
+        'White': '#FFFFFF', 
+        'Navy': '#1A2237',
+        'Red': '#A82235',
+        'Maroon': '#642838',
+        'Forest': '#223B26',
+        'Forest Green': '#223B26',
+        'Royal': '#274D91',
+        'Heather Navy': '#454545',
+        'Dark Heather': '#454545',
+        'Ice Grey': '#DCD2BE',
+        'Dark Chocolate': '#31221D',
+        'Galapagos Blue': '#005C70',
+        'Azalea': '#FF8E9D',
+        'Vegas Gold': '#F7E1B0',
+        'Cherry Red': '#A82235',
+        'Antique Cherry Red': '#A82235',
+        'Texas Orange': '#B54557',
+        'Heather Indigo': '#6A798E',
+        'Indigo Blue': '#4B0082',
+        'Purple': '#800080',
+        'Light Blue': '#87CEEB',
+        'Sand': '#F4D1A1',
+        'Light Pink': '#FFB6C1',
+        'Safety Pink': '#FF1493',
+        'Sapphire': '#0F52BA',
+        'Blue Dusk': '#4682B4',
+        'Sport Grey': '#8C8C8C',
+        'Orange': '#FF8C00',
+        'Gold': '#FFD700',
+        'Natural': '#F5F5DC',
+        'Tangerine': '#FF8C00',
+        'Olive': '#808000',
+        'Cardinal Red': '#C41E3A',
+        'Jade Dome': '#00A86B',
+        'Heather Sapphire': '#0F52BA'
+      };
+      return colorMapping[colorName] || '#666666';
+    }
 
     return new Response(JSON.stringify(products), { 
       status: 200, 
