@@ -38,7 +38,9 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
     
     if (!response.ok) {
       console.error('[printify.ts] Failed to fetch products:', response.status, response.statusText);
-      return [];
+      // Return mock data as fallback
+      const { getFeaturedProducts } = await import('../data/products');
+      return await getFeaturedProducts(4);
     }
     
     // Check if response is JSON
@@ -47,7 +49,9 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
       console.error('[printify.ts] Response is not JSON:', contentType);
       const text = await response.text();
       console.error('[printify.ts] Response text:', text.substring(0, 100));
-      return [];
+      // Return mock data as fallback
+      const { getFeaturedProducts } = await import('../data/products');
+      return await getFeaturedProducts(4);
     }
     
     const data = await response.json();
@@ -58,11 +62,20 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
     
     if (products.length === 0) {
       console.log('[printify.ts] No products in response');
-      return [];
+      // Return mock data as fallback
+      const { getFeaturedProducts } = await import('../data/products');
+      return await getFeaturedProducts(4);
     }
     
     // Transform Printify products to our Product type
     return products.map((item: any) => {
+      // Check if this is already in our Product format (mock data)
+      if (item.name && item.description && item.tags && item.sizes) {
+        // This is mock data already in the correct format
+        return item as Product;
+      }
+      
+      // This is real Printify API data that needs transformation
       const images = Array.isArray(item.images) 
         ? item.images.filter(Boolean) 
         : [item.image].filter(Boolean);
@@ -90,7 +103,14 @@ export async function fetchPrintifyProducts(): Promise<Product[]> {
     });
   } catch (error) {
     console.error('[printify.ts] Error fetching Printify products:', error);
-    return [];
+    // Return mock data as fallback
+    try {
+      const { getFeaturedProducts } = await import('../data/products');
+      return await getFeaturedProducts(4);
+    } catch (importError) {
+      console.error('[printify.ts] Failed to import mock data:', importError);
+      return [];
+    }
   }
 }
 

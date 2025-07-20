@@ -27,7 +27,7 @@ const FeaturedProducts = ({ products: propProducts, loading: propLoading }: Feat
         setLoading(true)
         setError(null)
         const featured = await fetchPrintifyProducts()
-        setProducts(featured.slice(0, 6)) // Take first 6 as featured
+        setProducts(featured.slice(0, 4)) // Take first 4 as featured
       } catch (err) {
         console.error('Failed to load featured products:', err)
         setError('Failed to load featured products. Please check your API configuration.')
@@ -143,25 +143,20 @@ const FeaturedProducts = ({ products: propProducts, loading: propLoading }: Feat
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
-            {products.map((product, index) => {
-              const isFeatured = index === 0
-              
-              return (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.15, duration: 0.6 }}
-                  viewport={{ once: true }}
-                  className={isFeatured ? 'lg:col-span-2 lg:row-span-2' : ''}
-                >
-                  <ProductCard
-                    product={product}
-                  />
-                </motion.div>
-              )
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-12">
+            {products.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.15, duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <ProductCard
+                  product={product}
+                />
+              </motion.div>
+            ))}
           </div>
 
           {/* CTA */}
