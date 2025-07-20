@@ -1,15 +1,18 @@
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { User, ShoppingBag, Package, Settings, ChevronRight, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { User, Package, LogOut, AlertCircle } from 'lucide-react'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { supabase, isSupabaseAvailable } from '../lib/supabase'
 
 const Account = () => {
-  const { user, profile, signOut, loading } = useAuth()
+  const { user, profile, signOut, loading, isAuthenticated } = useAuth()
   const [signingOut, setSigningOut] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    email: '',
+    full_name: '',
+    phone: ''
+  })
 
   const handleSignOut = async () => {
     try {
@@ -22,126 +25,177 @@ const Account = () => {
     }
   }
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || profile?.full_name || '',
+        phone: user.user_metadata?.phone || profile?.phone || ''
+      })
+    }
+  }, [user, profile])
+
+  // Add loading state check
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
     )
   }
 
-  if (!user) {
-    // If Supabase is not available, show a simple message
-    if (!supabase) {
-      return (
-        <div className="min-h-screen py-16">
-          <div className="max-w-md mx-auto px-4 text-center">
-            <h1 className="text-3xl font-bold mb-8">Account</h1>
-            <div className="p-6 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-amber-800">Authentication is currently not configured.</p>
-              <p className="text-sm text-amber-600 mt-2">
-                Please configure Supabase to enable user accounts.
-              </p>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
+  // Add authentication check
+  if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen py-16">
-        <div className="max-w-md mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center mb-8">Welcome to Saffron Society</h1>
-          
-          {authError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-red-700">
-                <p className="font-semibold">Authentication Error</p>
-                <p>{authError}</p>
-                {authError.includes('Facebook') && (
-                  <p className="mt-2">Facebook login is not yet configured. Please use email or Google login instead.</p>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <Auth
-            supabaseClient={supabase!}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#f97316',
-                    brandAccent: '#ea580c',
-                  },
-                },
-              },
-            }}
-            providers={['google']}
-            redirectTo={`${window.location.origin}/account`}
-            onlyThirdPartyProviders={false}
-            view="sign_in"
-          />
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Please log in to view your account</h2>
+          <Link
+            to="/login"
+            className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Go to Login
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
-              <button
-                onClick={handleSignOut}
-                disabled={signingOut}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
-              >
-                <LogOut className="w-5 h-5" />
-                {signingOut ? 'Signing out...' : 'Sign Out'}
-              </button>
-            </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">My Account</h1>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.full_name || 'User avatar'}
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-8 h-8 text-orange-600" />
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold">
-                    {profile?.full_name || 'Customer'}
-                  </h2>
-                  <p className="text-gray-600">{user.email}</p>
-                  {profile?.role === 'admin' && (
-                    <span className="inline-block mt-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
-                      Admin
-                    </span>
-                  )}
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Sidebar */}
+            <div className="md:col-span-1">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="space-y-2">
+                  <Link
+                    to="/account"
+                    className="flex items-center justify-between p-3 rounded-lg bg-orange-50 text-orange-600"
+                  >
+                    <div className="flex items-center gap-3">
+                      <User className="w-5 h-5" />
+                      <span className="font-medium">Profile</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+
+                  <Link
+                    to="/orders"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Package className="w-5 h-5" />
+                      <span className="font-medium">Orders</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+
+                  <Link
+                    to="/wishlist"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      <ShoppingBag className="w-5 h-5" />
+                      <span className="font-medium">Wishlist</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+
+                  <Link
+                    to="/settings"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Settings className="w-5 h-5" />
+                      <span className="font-medium">Settings</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+
+                  <button
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium">
+                        {signingOut ? 'Signing out...' : 'Sign Out'}
+                      </span>
+                    </div>
+                  </button>
                 </div>
               </div>
+            </div>
 
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Package className="w-5 h-5" />
-                  Order History
-                </h3>
-                <p className="text-gray-600">No orders yet. Start shopping!</p>
+            {/* Main Content */}
+            <div className="md:col-span-2">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
+
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      disabled
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      id="full_name"
+                      value={formData.full_name}
+                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+
+                  <div className="pt-4">
+                    <button
+                      type="button"
+                      className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

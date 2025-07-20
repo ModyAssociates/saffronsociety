@@ -5,7 +5,17 @@ import type { Product } from '../types'
 import { fetchPrintifyProducts } from '../services/printify'
 
 // Fallback mock data that matches the Product interface exactly
-const MOCK_PRODUCTS: Product[] = [
+export const mockProducts: Product[] = [
+  {
+    id: '1',
+    name: 'Baazigar (1993) — Pulp Grit',
+    price: 24.95,
+    description: 'A vintage-inspired design celebrating the iconic Bollywood thriller...',
+    images: ['/assets/products/baazigar-pulp-grit.jpg'],
+    category: 'Unisex',
+    availableSizes: ['S', 'M', 'L', 'XL', '2XL'],
+    availableColors: ['#000000', '#FFFFFF', '#8B4513'] // Black, White, Brown
+  },
   {
     id: "mock-1",
     name: "Vintage Bollywood Hero Tee",
@@ -91,7 +101,7 @@ export async function fetchProducts(): Promise<Product[]> {
     
     if (!Array.isArray(products) || products.length === 0) {
       console.log('[products.ts] No products returned from API, using fallback mock data')
-      return MOCK_PRODUCTS
+      return mockProducts
     }
     
     console.log(`[products.ts] Successfully fetched ${products.length} products from API`)
@@ -99,7 +109,7 @@ export async function fetchProducts(): Promise<Product[]> {
     
   } catch (error) {
     console.error('[products.ts] Error fetching from API, using fallback mock data:', error)
-    return MOCK_PRODUCTS
+    return mockProducts
   }
 }
 

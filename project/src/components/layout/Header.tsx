@@ -17,13 +17,17 @@ export default function Header() {
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      setIsUserMenuOpen(false)
-      navigate('/') // Redirect to home after sign out
+      console.log('Sign out button clicked');
+      setIsUserMenuOpen(false); // Close the menu immediately
+      await signOut();
+      console.log('Sign out successful, navigating to home');
+      navigate('/', { replace: true });
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Sign out error:', error);
+      // Still navigate away even if there's an error
+      navigate('/', { replace: true });
     }
-  }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -42,7 +46,7 @@ export default function Header() {
   return (
     <header className="bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-200 shadow-lg sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 relative overflow-visible">
           {/* Logo */}
           <Link to="/" className="flex items-center group">
             <motion.h1 
@@ -150,16 +154,16 @@ export default function Header() {
             )}
 
             {/* Cart Icon */}
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/cart" className="relative p-2 rounded-full hover:bg-white/30 transition-colors">
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="relative">
+              <Link to="/cart" className="relative p-2 rounded-full hover:bg-white/30 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]">
                 <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-orange-600 transition-colors" />
                 {itemCount > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg"
+                    className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg min-w-[20px] z-10"
                   >
-                    {itemCount}
+                    {itemCount > 99 ? '99+' : itemCount}
                   </motion.span>
                 )}
               </Link>
@@ -202,6 +206,16 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              
+              {/* Mobile Cart Link */}
+              <Link
+                to="/cart"
+                className="flex items-center py-3 px-2 text-gray-700 hover:text-orange-600 hover:bg-white/50 rounded-lg transition-all font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Cart {itemCount > 0 && `(${itemCount})`}
+              </Link>
               
               {/* Mobile Authentication Links */}
               <hr className="my-2 border-orange-200" />

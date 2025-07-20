@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ArrowLeft, Heart, Package, Shield, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, ChevronLeft, ChevronRight, ChevronDown, Star, Truck, Shield, Package } from 'lucide-react';
 import { Product } from '../types';
-import { fetchProducts } from '../data/products';
 import { useCart } from '../context/CartContext';
+import { fetchPrintifyProducts, hexToColorName } from '../services/printify';
 import placeholderImg from '../assets/logo_big.png'
 
-const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
+const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL']
 
 // Utility function to decode HTML entities
 const decodeHTMLEntities = (text: string): string => {
@@ -248,6 +248,7 @@ const ProductDetails = () => {
   const [mainImage, setMainImage] = useState<string>('')
   const [selectedColor, setSelectedColor] = useState<string>('')
   const [selectedSize, setSelectedSize] = useState<string>(AVAILABLE_SIZES[2]) // Default to M
+  const [currentPrice, setCurrentPrice] = useState<number>(0)
   const [quantity, setQuantity] = useState(1)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['about']))
 
@@ -255,19 +256,99 @@ const ProductDetails = () => {
     loadProduct()
   }, [id])
 
+  // Update price when size or color changes
+  useEffect(() => {
+    if (product && selectedSize) {
+      updatePrice()
+    }
+  }, [product, selectedSize, selectedColor])
+
+  // Update image when color changes
+  useEffect(() => {
+    if (product && selectedColor) {
+      updateImageForColor()
+    }
+  }, [selectedColor])
+
+  const updatePrice = () => {
+    if (!product) return
+    
+    // Find the color name from the hex value
+    const selectedColorName = product.colors?.find(c => c.hex === selectedColor)?.name
+    
+    // Find variant that matches selected size and color
+    const matchingVariant = product.variants?.find(v => {
+      const sizeMatch = v.size === selectedSize
+      const colorMatch = v.color?.toLowerCase() === selectedColorName?.toLowerCase()
+      return sizeMatch && colorMatch
+    })
+    
+    if (matchingVariant) {
+      setCurrentPrice(matchingVariant.price)
+    } else {
+      // Fallback to product base price or lowest variant price
+      const lowestPrice = product.variants && product.variants.length > 0
+        ? Math.min(...product.variants.filter(v => v.is_enabled).map(v => v.price))
+        : product.price
+      setCurrentPrice(lowestPrice)
+    }
+  }
+
+  const updateImageForColor = () => {
+    if (!product) return
+    
+    // Find color-specific image
+    const selectedColorData = product.colors?.find(c => 
+      c.hex === selectedColor || c.name.toLowerCase() === selectedColor.toLowerCase()
+    )
+    
+    if (selectedColorData?.image) {
+      setMainImage(selectedColorData.image)
+    } else if (product.images && product.images.length > 0) {
+      // Fallback to first available image
+      setMainImage(product.images[0])
+    }
+  }
+
+  // Check if a size is available for the current selected color
+  const isSizeAvailable = (size: string): boolean => {
+    if (!product || !product.variants) return false
+    
+    const selectedColorName = product.colors?.find(c => c.hex === selectedColor)?.name
+    
+    // Check if there's a variant with this size and color that's available
+    return product.variants.some(v => 
+      v.size === size && 
+      v.color?.toLowerCase() === selectedColorName?.toLowerCase() &&
+      v.is_enabled &&
+      v.is_available
+    )
+  }
+
   async function loadProduct() {
     try {
       setLoading(true)
-      const products = await fetchProducts()
+      const products = await fetchPrintifyProducts()
       const found = products.find(p => p.id === id)
       if (found) {
         setProduct(found)
-        // Handle different image formats
-        const firstImage = typeof found.image === 'string' 
-          ? found.image 
-          : found.image?.src || placeholderImg
+        
+        // Set initial image - prioritize product.images array
+        const firstImage = found.images && found.images.length > 0
+          ? found.images[0]
+          : typeof found.image === 'string' 
+            ? found.image 
+            : found.image?.src || placeholderImg
         setMainImage(firstImage)
+        
+        // Set initial color
         setSelectedColor(found.colors?.[0]?.hex || found.colors?.[0]?.name || '')
+        
+        // Set initial price
+        const lowestPrice = found.variants && found.variants.length > 0
+          ? Math.min(...found.variants.filter(v => v.is_enabled).map(v => v.price))
+          : found.price
+        setCurrentPrice(lowestPrice)
       }
     } catch (error) {
       console.error('Failed to load product:', error)
@@ -321,7 +402,7 @@ const ProductDetails = () => {
             onClick={() => navigate('/shop')}
             className="text-orange-500 hover:text-orange-600 flex items-center gap-2 mx-auto"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4" />
             Back to products
           </button>
         </div>
@@ -329,13 +410,10 @@ const ProductDetails = () => {
     )
   }
 
-  // Get the main product image
-  const mainImageSrc = typeof product.image === 'string' 
-    ? product.image 
-    : product.image?.src || placeholderImg
-
-  // For now, we only have one image per product
-  const productImages = [mainImageSrc]
+  // Get all product images including the main image and additional images
+  const productImages = product.images && product.images.length > 0 
+    ? product.images 
+    : [typeof product.image === 'string' ? product.image : product.image?.src || placeholderImg]
 
   return (
     <div className="min-h-screen py-8 px-4 md:px-8 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -345,7 +423,7 @@ const ProductDetails = () => {
           onClick={() => navigate('/shop')}
           className="mb-6 text-gray-700 hover:text-orange-600 flex items-center gap-2 transition-colors font-medium"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" />
           Back to products
         </button>
 
@@ -419,7 +497,7 @@ const ProductDetails = () => {
                   {decodeHTMLEntities(product.name)}
                 </h1>
                 <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  ${product.price.toFixed(2)}
+                  ${currentPrice.toFixed(2)}
                 </p>
               </div>
 
@@ -454,7 +532,7 @@ const ProductDetails = () => {
                   </div>
                   {selectedColor && (
                     <p className="text-sm text-gray-600 mt-3 font-medium">
-                      Selected: {hexToName(selectedColor)}
+                      Selected: {product.colors?.find(c => c.hex === selectedColor)?.name || hexToName(selectedColor)}
                     </p>
                   )}
                 </div>
@@ -463,22 +541,35 @@ const ProductDetails = () => {
               {/* Size Selection */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Size</h3>
-                <div className="grid grid-cols-4 gap-3">
-                  {AVAILABLE_SIZES.map(size => (
-                    <motion.button
-                      key={size}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedSize(size)}
-                      className={`py-3 px-4 border-2 rounded-xl font-semibold transition-all ${
-                        selectedSize === size
-                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-lg'
-                          : 'border-white/60 bg-white/50 hover:border-orange-300 hover:bg-orange-50/50'
-                      }`}
-                    >
-                      {size}
-                    </motion.button>
-                  ))}
+                <div className="grid grid-cols-3 gap-3">
+                  {AVAILABLE_SIZES.map(size => {
+                    const isAvailable = isSizeAvailable(size)
+                    const isSelected = selectedSize === size
+                    
+                    return (
+                      <motion.button
+                        key={size}
+                        whileHover={isAvailable ? { scale: 1.05 } : {}}
+                        whileTap={isAvailable ? { scale: 0.95 } : {}}
+                        onClick={() => isAvailable && setSelectedSize(size)}
+                        disabled={!isAvailable}
+                        className={`py-3 px-4 border-2 rounded-xl font-semibold transition-all relative ${
+                          isSelected && isAvailable
+                            ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-lg'
+                            : isAvailable
+                            ? 'border-white/60 bg-white/50 hover:border-orange-300 hover:bg-orange-50/50'
+                            : 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center">
+                          <span className={isAvailable ? '' : 'line-through'}>{size}</span>
+                          {!isAvailable && (
+                            <span className="text-xs text-gray-400 mt-1">Sold Out</span>
+                          )}
+                        </div>
+                      </motion.button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -509,13 +600,18 @@ const ProductDetails = () => {
               {/* Add to Cart & Wishlist */}
               <div className="flex gap-4 mb-6">
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleAddToCart}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 px-6 rounded-xl font-bold hover:from-orange-600 hover:to-red-600 transition-all flex items-center justify-center gap-3 shadow-lg text-lg"
+                  whileHover={isSizeAvailable(selectedSize) ? { scale: 1.02 } : {}}
+                  whileTap={isSizeAvailable(selectedSize) ? { scale: 0.98 } : {}}
+                  onClick={isSizeAvailable(selectedSize) ? handleAddToCart : undefined}
+                  disabled={!isSizeAvailable(selectedSize)}
+                  className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-lg text-lg ${
+                    isSizeAvailable(selectedSize)
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600'
+                      : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  }`}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  Add to Cart
+                  {isSizeAvailable(selectedSize) ? 'Add to Cart' : 'Size Not Available'}
                 </motion.button>
                 <motion.button 
                   whileHover={{ scale: 1.1 }}
@@ -581,7 +677,19 @@ const ProductDetails = () => {
                               <div>
                                 <h3 className="font-semibold mb-2">The Design</h3>
                                 <p className="font-medium mb-2">{section.content.designTitle}</p>
-                                <p>{section.content.designDescription}</p>
+                                <div 
+                                  className="prose prose-sm max-w-none
+                                    [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:text-gray-800 [&>h2]:mt-6 [&>h2]:mb-3 [&>h2]:first:mt-0
+                                    [&>h3]:text-base [&>h3]:font-semibold [&>h3]:text-gray-800 [&>h3]:mt-4 [&>h3]:mb-2 
+                                    [&>h4]:text-sm [&>h4]:font-semibold [&>h4]:text-gray-800 [&>h4]:mt-3 [&>h4]:mb-2
+                                    [&>p]:text-sm [&>p]:text-gray-700 [&>p]:mb-3 [&>p]:leading-relaxed
+                                    [&>ul]:text-sm [&>ul]:text-gray-700 [&>ul]:mb-3 [&>ul]:space-y-1
+                                    [&>ul>li]:flex [&>ul>li]:items-start [&>ul>li]:ml-4
+                                    [&>ul>li:before]:content-['•'] [&>ul>li:before]:text-orange-500 [&>ul>li:before]:mr-2 [&>ul>li:before]:mt-0.5
+                                    [&>strong]:font-semibold [&>strong]:text-gray-800
+                                    [&>em]:italic [&>em]:text-gray-600"
+                                  dangerouslySetInnerHTML={{ __html: product.description || 'Express yourself with this unique design from Saffron Society. Our premium quality t-shirts combine comfort with style, perfect for making a statement wherever you go.' }} 
+                                />
                                 <button className="text-orange-500 hover:text-orange-600 text-sm mt-2">
                                   Read more
                                 </button>

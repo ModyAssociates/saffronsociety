@@ -15,6 +15,12 @@ export default async (req, context) => {
     return new Response(null, { status: 200, headers });
   }
 
+  // Helper function to strip HTML tags
+  function stripHtml(html) {
+    if (!html) return '';
+    return html.replace(/<[^>]*>/g, '').trim();
+  }
+
   try {
     // For testing, temporarily hardcode the credentials
     const shopId = process.env.PRINTIFY_SHOP_ID || "22019146";
@@ -123,7 +129,7 @@ export default async (req, context) => {
         }
       ];
       
-      return new Response(JSON.stringify(mockProducts), { 
+      return new Response(JSON.stringify({ products: mockProducts }), { 
         status: 200, 
         headers 
       });
@@ -189,7 +195,11 @@ export default async (req, context) => {
       if (product.variants && product.variants.length > 0) {
         const enabledVariants = product.variants.filter(v => v.is_enabled);
         if (enabledVariants.length > 0) {
-          const prices = enabledVariants.map(v => parseFloat(v.price) / 100);
+          const prices = enabledVariants.map(v => {
+            const price = parseFloat(v.price);
+            // Convert from cents to dollars if price is > 100
+            return price > 100 ? price / 100 : price;
+          });
           minPrice = Math.min(...prices);
         }
       }
@@ -198,7 +208,7 @@ export default async (req, context) => {
         id: product.id,
         title: product.title,
         name: product.title,
-        description: product.description || 'A stylish Bollywood-inspired t-shirt design',
+        description: stripHtml(product.description) || 'A stylish Bollywood-inspired t-shirt design',
         price: minPrice,
         image: firstImage,
         images: product.images?.map(img => img.src) || [firstImage],
@@ -206,7 +216,32 @@ export default async (req, context) => {
         category: 'T-Shirts',
         tags: Array.isArray(product.tags) ? product.tags : ['bollywood', 'vintage'],
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-        variants: product.variants?.filter(v => v.is_enabled) || []
+        variants: product.variants?.filter(v => v.is_enabled).map(v => {
+          // Extract size and color from variant title
+          const extractSizeFromTitle = (title) => {
+            const sizeMatch = title.match(/\b(XS|S|M|L|XL|XXL|2XL|3XL|4XL|5XL)\b/i);
+            if (!sizeMatch) return undefined;
+            
+            const size = sizeMatch[1].toUpperCase();
+            
+            // Normalize size naming to match UI conventions
+            if (size === 'XXL') return '2XL';
+            
+            return size;
+          };
+
+          const extractColorFromTitle = (title) => {
+            const parts = title.split(' / ');
+            return parts.length >= 2 ? parts[0].trim() : undefined;
+          };
+
+          return {
+            ...v,
+            price: parseFloat(v.price) > 100 ? parseFloat(v.price) / 100 : parseFloat(v.price),
+            size: extractSizeFromTitle(v.title),
+            color: extractColorFromTitle(v.title)
+          };
+        }) || []
       };
       
       console.log('[printify-products] Transformed product colors for', product.title, ':', colors);
@@ -256,7 +291,7 @@ export default async (req, context) => {
       return colorMapping[colorName] || '#666666';
     }
 
-    return new Response(JSON.stringify(products), { 
+    return new Response(JSON.stringify({ products }), { 
       status: 200, 
       headers 
     });
@@ -276,8 +311,4 @@ export default async (req, context) => {
       }
     );
   }
-};
-
-export const config = {
-  path: "/api/printify-products"
 };

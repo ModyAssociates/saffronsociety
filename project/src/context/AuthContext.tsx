@@ -248,9 +248,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signOut = async () => {
-    if (!supabase) throw new Error('Authentication not available')
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    try {
+      console.log('Attempting to sign out...');
+      
+      // Clear local state first
+      setUser(null);
+      
+      // Then try to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Supabase sign out error:', error);
+        // Don't throw error - we've already cleared local state
+      }
+      
+      // Clear any stored session data
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
+      
+      console.log('Sign out completed');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Ensure state is cleared even on error
+      setUser(null);
+    }
   }
 
   const isAdmin = profile?.role === 'admin'

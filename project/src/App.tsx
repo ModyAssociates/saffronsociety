@@ -9,10 +9,12 @@ import ProductDetails from './pages/ProductDetails';
 import CartPage from './pages/CartPage';
 import Checkout from './pages/CheckoutPage';
 import About from './pages/About';
+import Login from './pages/Login';
 import Account from './pages/Account';
 import Admin from './pages/Admin';
 import OrderConfirmation from './pages/OrderConfirmation';
 import AuthCallback from './pages/AuthCallback';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -29,7 +31,12 @@ function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/account" element={<Account />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/account" element={
+                  <ProtectedRoute>
+                    <Account />
+                  </ProtectedRoute>
+                } />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />

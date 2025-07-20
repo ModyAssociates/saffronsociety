@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
+import { hexToColorName } from '../services/printify';
 import type { CartItem } from '../types/cart';
 
 const CartPage = () => {
-  const { state, removeFromCart, updateQuantity } = useCart();
+  const { items, removeItem, updateQuantity, total } = useCart();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -16,7 +17,13 @@ const CartPage = () => {
     return `$${price.toFixed(2)}`;
   };
 
-  if (state.items.length === 0) {
+  const stripHtml = (html: string) => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  };
+
+  if (items.length === 0) {
     return (
       <div className="container-custom py-16">
         <motion.div
@@ -68,9 +75,9 @@ const CartPage = () => {
             </div>
 
             {/* Cart Items */}
-            {state.items.map((item: CartItem) => (
+            {items.map((item: CartItem) => (
               <motion.div
-                key={item.id + '-' + (item.selectedColor || '') + '-' + (item.selectedSize || '')}
+                key={item.product.id + '-' + (item.selectedColor || '') + '-' + (item.selectedSize || '')}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -79,48 +86,38 @@ const CartPage = () => {
                 {/* Product */}
                 <div className="col-span-6 flex items-center">
                   <img
-                    src={item.images?.[0] || '/placeholder.png'}
-                    alt={item.name}
+                    src={item.product.images?.[0] || '/placeholder.png'}
+                    alt={item.product.name}
                     className="w-20 h-20 object-cover rounded-md"
                   />
-                  <div className="ml-4">
-                    <h3 className="font-medium text-neutral-800">{item.name}</h3>
-                    <p className="text-neutral-600 text-sm mt-1">{item.description.substring(0, 40)}...</p>
-                    {/* Show color and size if available */}
-                    <div className="text-xs text-neutral-500 mt-1">
-                      {item.selectedColor && (
-                        <span>
-                          Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {item.selectedColor}
-                        </span>
-                      )}
-                      {item.selectedSize && (
-                        <span className="ml-2">Size: {item.selectedSize}</span>
-                      )}
-                    </div>
-                    {/* Mobile Price */}
-                    <div className="flex justify-between items-center mt-2 md:hidden">
-                      <span className="text-neutral-800 font-medium">{formatPrice(item.price)}</span>
-                      <button
-                        onClick={() => removeFromCart(item.id, item.selectedColor, item.selectedSize)}
-                        className="text-neutral-400 hover:text-error-500 transition-colors p-1"
-                        aria-label={`Remove ${item.name} from cart`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      {item.product.name}
+                    </h3>
+                    
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span>Color: 
+                        <span 
+                          className="inline-block w-4 h-4 rounded-full ml-1 mr-1 border border-gray-300"
+                          style={{ backgroundColor: item.selectedColor }}
+                        ></span>
+                        {hexToColorName(item.selectedColor || '')}
+                      </span>
+                      <span>Size: {item.selectedSize}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Price (Desktop) */}
                 <div className="hidden md:block col-span-2 text-center text-neutral-800 font-medium">
-                  {formatPrice(item.price)}
+                  {formatPrice(item.product.price)}
                 </div>
 
                 {/* Quantity */}
                 <div className="col-span-2">
                   <div className="flex items-center justify-center border border-neutral-200 rounded-md max-w-32 mx-auto">
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedColor, item.selectedSize)}
+                      onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity - 1)}
                       className="text-neutral-600 hover:text-maroon transition-colors p-2"
                       aria-label="Decrease quantity"
                     >
@@ -128,7 +125,7 @@ const CartPage = () => {
                     </button>
                     <span className="mx-3">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedColor, item.selectedSize)}
+                      onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity + 1)}
                       className="text-neutral-600 hover:text-maroon transition-colors p-2"
                       aria-label="Increase quantity"
                     >
@@ -140,15 +137,22 @@ const CartPage = () => {
                 {/* Total */}
                 <div className="col-span-2 flex items-center justify-between md:justify-end">
                   <span className="font-semibold text-maroon">
-                    {formatPrice(item.price * item.quantity)}
+                    {formatPrice(item.product.price * item.quantity)}
                   </span>
                   {/* Delete Button (Desktop) */}
                   <button
-                    onClick={() => removeFromCart(item.id, item.selectedColor, item.selectedSize)}
-                    className="hidden md:block text-neutral-400 hover:text-error-500 transition-colors ml-4"
-                    aria-label={`Remove ${item.name} from cart`}
+                    onClick={() => {
+                      console.log('Removing item:', {
+                        productId: item.product.id,
+                        size: item.selectedSize || '',
+                        color: item.selectedColor || ''
+                      });
+                      removeItem(item.product.id, item.selectedSize || '', item.selectedColor || '');
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label="Remove item"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </motion.div>
@@ -165,7 +169,7 @@ const CartPage = () => {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Subtotal</span>
-                  <span className="text-neutral-800 font-medium">{formatPrice(state.totalAmount)}</span>
+                  <span className="text-neutral-800 font-medium">{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Shipping</span>
@@ -173,7 +177,7 @@ const CartPage = () => {
                 </div>
                 <div className="pt-3 border-t border-neutral-200 flex justify-between">
                   <span className="font-medium text-neutral-800">Total</span>
-                  <span className="font-bold text-xl text-maroon">{formatPrice(state.totalAmount)}</span>
+                  <span className="font-bold text-xl text-maroon">{formatPrice(total)}</span>
                 </div>
               </div>
 

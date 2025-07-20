@@ -59,7 +59,7 @@ const HeroSection: React.FC = () => {
                 ) : latestProduct ? (
                   <>
                     {/* Image container */}
-                    <div className="aspect-[3/4] bg-transparent relative overflow-hidden">
+                    <div className="aspect-square bg-transparent relative overflow-hidden">
                       <img
                         src={typeof latestProduct.image === 'string' ? latestProduct.image : latestProduct.image?.src || '/src/assets/logo_big.png'}
                         alt={latestProduct.name}
@@ -116,7 +116,10 @@ const HeroSection: React.FC = () => {
                       
                       <div className="flex items-center justify-center space-x-2 mb-2">
                         <span className="text-xl font-black text-orange-600">
-                          ${latestProduct.price}
+                          ${(latestProduct.variants && latestProduct.variants.length > 0
+                            ? Math.min(...latestProduct.variants.filter(v => v.is_enabled).map(v => v.price))
+                            : latestProduct.price
+                          ).toFixed(2)}
                         </span>
                         <div className="text-xs font-mono text-gray-500 uppercase">
                           CULT CLASSIC
@@ -167,7 +170,8 @@ const HeroSection: React.FC = () => {
               transition={{ duration: 0.8 }}
               className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6"
             >
-              Wear Cult Classics
+              <br />Wear the<br />
+              Cult Classics.
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -175,7 +179,7 @@ const HeroSection: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto lg:mx-0"
             >
-              Celebrating Bollywood's Golden Era with Premium Vintage T-Shirts
+              Bollywood's Golden Era Meets Modern Streetwear
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}

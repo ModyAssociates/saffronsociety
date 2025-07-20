@@ -1,6 +1,7 @@
 import type { Product } from './index'
 
-export interface CartItem extends Product {
+export interface CartItem {
+  product: Product
   selectedColor?: string
   selectedSize?: string
   quantity: number

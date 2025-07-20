@@ -48,8 +48,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems(current => {
       const existingIndex = current.findIndex(
         item => item.product.id === product.id && 
-                item.selectedSize === size && 
-                item.selectedColor === color
+                (item.selectedSize || '') === size && 
+                (item.selectedColor || '') === color
       );
 
       if (existingIndex >= 0) {
@@ -63,13 +63,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeItem = (productId: string, size: string, color: string) => {
-    setItems(current => 
-      current.filter(item => 
+    console.log('RemoveItem called with:', { productId, size, color });
+    console.log('Current cart items:', items.map(item => ({
+      id: item.product.id,
+      size: item.selectedSize,
+      color: item.selectedColor
+    })));
+    
+    setItems(current => {
+      const filtered = current.filter(item => 
         !(item.product.id === productId && 
-          item.selectedSize === size && 
-          item.selectedColor === color)
-      )
-    );
+          (item.selectedSize || '') === size && 
+          (item.selectedColor || '') === color)
+      );
+      console.log('Items after filter:', filtered.length, 'vs before:', current.length);
+      return filtered;
+    });
   };
 
   const updateQuantity = (productId: string, size: string, color: string, quantity: number) => {
@@ -81,8 +90,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems(current =>
       current.map(item =>
         item.product.id === productId && 
-        item.selectedSize === size && 
-        item.selectedColor === color
+        (item.selectedSize || '') === size && 
+        (item.selectedColor || '') === color
           ? { ...item, quantity }
           : item
       )

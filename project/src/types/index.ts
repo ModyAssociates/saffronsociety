@@ -3,19 +3,23 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  image: string | { src: string };  // Single image, not array
+  image: string | { src: string };  // Main image
+  images?: string[];  // Array of all product images
   category: string;
   tags: string[];
   sizes: string[];
   colors: Array<{
     name: string;
     hex: string;
+    image?: string;  // Color-specific image
   }>;
   variants?: Array<{
     id: string;
     title: string;
     price: number;
     is_enabled: boolean;
+    size?: string;
+    color?: string;
   }>;
 }
 

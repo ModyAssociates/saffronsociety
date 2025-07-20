@@ -127,7 +127,7 @@ const FeaturedProducts = ({ products: propProducts, loading: propLoading }: Feat
               transition={{ delay: 0.3, duration: 0.6 }}
               viewport={{ once: true }}
             >
-              Featured <span className="text-gradient">Heritage</span> Collection
+              Be Proud. Be Bold. Be You.
             </motion.h2>
             
             <motion.p
@@ -137,13 +137,28 @@ const FeaturedProducts = ({ products: propProducts, loading: propLoading }: Feat
               transition={{ delay: 0.4, duration: 0.6 }}
               viewport={{ once: true }}
             >
-              Discover our most celebrated designs that perfectly capture the essence of 
-              vintage Bollywood glamour reimagined for today's streetwear enthusiasts.
+              
             </motion.p>
           </div>
 
+          {/* See More Link */}
+          <div className="flex justify-end mb-6">
+            <motion.a
+              href="/shop"
+              className="text-primary hover:text-secondary transition-colors duration-300 font-montserrat font-medium group flex items-center gap-2"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              viewport={{ once: true }}
+              whileHover={{ x: 5 }}
+            >
+              <span>See More</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </motion.a>
+          </div>
+
           {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {products.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -158,29 +173,6 @@ const FeaturedProducts = ({ products: propProducts, loading: propLoading }: Feat
               </motion.div>
             ))}
           </div>
-
-          {/* CTA */}
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <motion.button
-              className="btn-primary btn-lg group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = '/products'}
-            >
-              <span>Explore Full Collection</span>
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </motion.button>
-            
-            <p className="mt-4 text-sm text-neutral-500 font-montserrat">
-              Over 50+ unique designs available
-            </p>
-          </motion.div>
         </motion.div>
       </div>
     </section>

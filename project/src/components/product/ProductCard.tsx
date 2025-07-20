@@ -1,132 +1,163 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Product } from '../../types';
-import { motion } from 'framer-motion';
-import { Heart, ShoppingCart, Eye } from 'lucide-react';
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { ShoppingBag, Heart } from 'lucide-react'
+import type { Product } from '../../types/index'
+import { useCart } from '../../context/CartContext'
+import { normalizeImageUrl } from '../../services/printify'
 
 interface ProductCardProps {
-  product: Product;
+  product: Product
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
-  const [imageError, setImageError] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+const ProductCard = ({ product }: ProductCardProps) => {
+  const [isHovered, setIsHovered] = useState(false)
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0)
+  const [imageLoading, setImageLoading] = useState(true)
+  const [imageError, setImageError] = useState(false)
+  const { addItem } = useCart()
 
-  const firstVariant = product.variants[0];
-  const displayImage = typeof product.image === 'string' ? product.image : product.image?.src || '/assets/logo_big.png';
+  // Get the current image URL based on selected color
+  const currentImage = (() => {
+    try {
+      if (!product.images || product.images.length === 0) {
+        return '/assets/logo_big.png'
+      }
+
+      // If we have color-specific images
+      if (product.images[selectedColorIndex]) {
+        const img = product.images[selectedColorIndex]
+        return normalizeImageUrl(img)
+      }
+
+      // Fallback to first image
+      const firstImg = product.images[0]
+      return normalizeImageUrl(firstImg)
+    } catch (error) {
+      console.error('Error getting product image:', error)
+      return '/assets/logo_big.png'
+    }
+  })()
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const selectedColor = product.colors?.[selectedColorIndex]?.hex || '#000000'
+    const selectedSize = product.sizes?.[0] || 'M'
+    
+    addItem(product, selectedSize, selectedColor)
+  }
+
+  const handleImageLoad = () => {
+    setImageLoading(false)
+    setImageError(false)
+  }
+
+  const handleImageError = () => {
+    setImageLoading(false)
+    setImageError(true)
+  }
 
   return (
     <motion.div
-      className="group relative"
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group h-full flex flex-col"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      {/* Background Glow Effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-200/40 via-yellow-100/30 to-orange-300/40 rounded-xl blur-xl scale-105 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      
-      <Link to={`/product/${product.id}`} className="block group relative z-10">
-        <div className="bg-white/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/40 flex flex-col">
-          {/* Product Image */}
-          <div className="aspect-[4/5] bg-transparent relative overflow-hidden flex-shrink-0">
-            <img
-              src={imageError ? '/assets/logo_big.png' : displayImage}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500 filter drop-shadow-lg"
-              onError={() => setImageError(true)}
-            />
-            
-            {/* Film Grain Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-orange-50/10 mix-blend-overlay"></div>
-            
-            {/* Action Buttons */}
-            <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <motion.button
-                className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white hover:shadow-lg transition-all duration-200"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                aria-label="Add to wishlist"
-              >
-                <Heart className="w-4 h-4 text-gray-600 hover:text-red-500" />
-              </motion.button>
-              
-              <motion.button
-                className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white hover:shadow-lg transition-all duration-200"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                aria-label="Quick view"
-              >
-                <Eye className="w-4 h-4 text-gray-600 hover:text-orange-600" />
-              </motion.button>
+      <Link to={`/product/${product.id}`} className="flex flex-col h-full">
+        <div className="relative aspect-square overflow-hidden bg-gray-100">
+          {imageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
             </div>
-
-            {/* Quick Add Button */}
-            <motion.button
-              className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-4 py-2 rounded-full font-semibold text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 hover:from-orange-600 hover:to-yellow-600 shadow-xl border border-white/20 backdrop-blur-sm"
-              initial={{ y: 20, scale: 0.8 }}
-              animate={{ y: isHovered ? 0 : 20, scale: isHovered ? 1 : 0.8 }}
-              transition={{ duration: 0.3, ease: "backOut" }}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
+          )}
+          
+          <img
+            src={imageError ? '/assets/logo_big.png' : currentImage}
+            alt={product.name}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              imageLoading ? 'opacity-0' : 'opacity-100'
+            }`}
+            loading="lazy"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+          
+          {/* Quick Add Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
+            transition={{ duration: 0.3 }}
+            className="absolute bottom-4 left-4 right-4"
+          >
+            <button
+              onClick={handleQuickAdd}
+              className="w-full bg-white/90 backdrop-blur-sm text-gray-900 py-2 px-4 rounded-full flex items-center justify-center gap-2 hover:bg-white transition-colors duration-200 shadow-lg"
             >
-              <ShoppingCart className="w-3 h-3 inline mr-1" />
-              ADD TO CART
-            </motion.button>
-          </div>
-
-          {/* Product Info */}
-          <div className="p-4 bg-gradient-to-r from-white/90 to-orange-50/80 backdrop-blur-sm rounded-b-xl mt-0 border-t border-white/30 flex-1 flex flex-col">
-            <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-orange-700 transition-colors duration-200 uppercase tracking-wide h-10 leading-tight flex items-start">
-              {product.name}
-            </h3>
-            
-            {/* Color Swatches */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-3">
-                {product.colors.slice(0, 6).map((color, index) => (
-                  <motion.div
-                    key={index}
-                    className="w-6 h-6 rounded-full border-2 border-white shadow-sm cursor-pointer relative group/swatch"
-                    style={{ backgroundColor: color.hex }}
-                    whileHover={{ scale: 1.2, zIndex: 10 }}
-                    whileTap={{ scale: 0.9 }}
-                    title={color.name}
-                  >
-                    {/* Color name tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/swatch:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20 pointer-events-none">
-                      {color.name}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
-                    </div>
-                    
-                    {/* Inner circle for better visibility on light colors */}
-                    <div 
-                      className="absolute inset-1 rounded-full border border-black/10"
-                      style={{ 
-                        borderColor: color.hex === '#FFFFFF' || color.hex === '#F7E1B0' ? '#00000020' : 'transparent' 
-                      }}
-                    ></div>
-                  </motion.div>
-                ))}
-                {product.colors.length > 6 && (
-                  <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center text-xs font-bold text-gray-600">
-                    +{product.colors.length - 6}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between mt-auto">
-              <p className="text-2xl font-black text-orange-600">
-                ${firstVariant?.price || product.price}
-              </p>
-              <div className="text-xs font-mono text-gray-500 uppercase">
-                CULT CLASSIC
-              </div>
+              <ShoppingBag className="w-4 h-4" />
+              Quick Add to Cart
+            </button>
+          </motion.div>
+          
+          {/* Wishlist Button */}
+          <button
+            className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+          >
+            <Heart className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" />
+          </button>
+        </div>
+        
+        <div className="p-4 flex flex-col flex-grow">
+          {/* Title with fixed height for 2 lines */}
+          <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2 min-h-[3.5rem]">
+            {product.name}
+          </h3>
+          
+          <p className="text-xl font-bold text-orange-600 mb-3">
+            ${(product.variants && product.variants.length > 0
+              ? Math.min(...product.variants.filter((v: any) => v.is_enabled).map((v: any) => v.price))
+              : product.price
+            ).toFixed(2)}
+          </p>
+          
+          {/* Color Swatches */}
+          {product.colors && product.colors.length > 0 && (
+            <div className="flex gap-2 mt-auto">
+              {product.colors.slice(0, 4).map((color: any, index: number) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setSelectedColorIndex(index)
+                  }}
+                  className={`w-6 h-6 rounded-full border-2 transition-all duration-200 ${
+                    index === selectedColorIndex
+                      ? 'border-gray-900 shadow-md scale-110'
+                      : 'border-gray-300 hover:border-gray-500'
+                  }`}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                />
+              ))}
+              {product.colors.length > 4 && (
+                <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center text-xs font-bold text-gray-600">
+                  +{product.colors.length - 4}
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </Link>
     </motion.div>
-  );
+  )
 }
+
+export default ProductCard

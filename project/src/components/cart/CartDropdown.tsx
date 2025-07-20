@@ -2,7 +2,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Trash2, Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext.tsx';
-import type { CartItem } from '../../types/cart'; // <-- Import CartItem type
+import { hexToColorName } from '../../services/printify';
+import type { CartItem } from '../../types/cart';
 
 interface CartDropdownProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface CartDropdownProps {
 }
 
 const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
-  const { state, removeFromCart, updateQuantity } = useCart();
+  const { items, removeItem, updateQuantity, total } = useCart();
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -30,7 +31,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-end"
           onClick={handleBackdropClick}
         >
           <motion.div
@@ -58,7 +59,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
 
             {/* Cart Content */}
             <div className="flex-grow overflow-auto p-4">
-              {state.items.length === 0 ? (
+              {items.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6">
                   <ShoppingBag className="h-16 w-16 text-neutral-300 mb-4" />
                   <h3 className="font-playfair text-xl font-bold text-neutral-800 mb-2">
@@ -76,26 +77,26 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {state.items.map((item: CartItem) => (
+                  {items.map((item: CartItem) => (
                     <div 
-                      key={item.id + '-' + (item.selectedColor || '') + '-' + (item.selectedSize || '')} 
+                      key={item.product.id + '-' + (item.selectedColor || '') + '-' + (item.selectedSize || '')} 
                       className="flex items-center border-b border-neutral-200 pb-4"
                     >
                       <img 
-                        src={item.images?.[0] || '/placeholder.png'} 
-                        alt={item.name}
+                        src={item.product.images?.[0] || '/placeholder.png'} 
+                        alt={item.product.name}
                         className="w-20 h-20 object-cover rounded-md"
                       />
                       <div className="ml-4 flex-grow">
-                        <h3 className="font-medium text-neutral-800">{item.name}</h3>
+                        <h3 className="font-medium text-neutral-800">{item.product.name}</h3>
                         <p className="text-neutral-600 text-sm mt-1">
-                          {formatPrice(item.price)} x {item.quantity}
+                          {formatPrice(item.product.price)} x {item.quantity}
                         </p>
                         {/* Show color and size if available */}
                         <div className="text-xs text-neutral-500 mt-1">
                           {item.selectedColor && (
                             <span>
-                              Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {item.selectedColor}
+                              Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {hexToColorName(item.selectedColor)}
                             </span>
                           )}
                           {item.selectedSize && (
@@ -105,7 +106,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                         {/* Quantity Control */}
                         <div className="flex items-center mt-2">
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedColor, item.selectedSize)}
+                            onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity - 1)}
                             className="text-neutral-600 hover:text-maroon transition-colors p-1"
                             aria-label="Decrease quantity"
                           >
@@ -113,7 +114,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                           </button>
                           <span className="mx-2 min-w-8 text-center">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedColor, item.selectedSize)}
+                            onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity + 1)}
                             className="text-neutral-600 hover:text-maroon transition-colors p-1"
                             aria-label="Increase quantity"
                           >
@@ -124,12 +125,12 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                       
                       <div className="ml-2 flex flex-col items-end">
                         <span className="font-semibold text-neutral-800">
-                          {formatPrice(item.price * item.quantity)}
+                          {formatPrice(item.product.price * item.quantity)}
                         </span>
                         <button
-                          onClick={() => removeFromCart(item.id, item.selectedColor, item.selectedSize)}
+                          onClick={() => removeItem(item.product.id, item.selectedColor || '', item.selectedSize || '')}
                           className="text-neutral-400 hover:text-error-500 transition-colors mt-2"
-                          aria-label={`Remove ${item.name} from cart`}
+                          aria-label={`Remove ${item.product.name} from cart`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -141,12 +142,12 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
             </div>
 
             {/* Footer */}
-            {state.items.length > 0 && (
+            {items.length > 0 && (
               <div className="border-t border-neutral-200 p-4 bg-neutral-50">
                 <div className="flex justify-between mb-4">
                   <span className="font-medium text-neutral-800">Total:</span>
                   <span className="font-bold text-xl text-maroon">
-                    {formatPrice(state.totalAmount)}
+                    {formatPrice(total)}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
