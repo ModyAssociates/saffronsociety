@@ -5,6 +5,43 @@ export const decodeHTMLEntities = (text: string): string => {
   return textarea.value
 }
 
+/* -------------------------------------------------- *
+ *  EXTRACT  ➜  Why You'll Love It (first sentence)
+ * -------------------------------------------------- */
+export const extractWhyYoullLoveIt = (description = ''): string => {
+  // 1. decode entities (&mdash; → —)
+  const decoded = decodeHTMLEntities(description);
+
+  // 2. break into trimmed lines
+  const lines = decoded
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  // 3. find heading containing “Why You'll Love It”
+  const start = lines.findIndex(l => /why you'll love it/i.test(l));
+  if (start === -1) return '';
+
+  // 4. collect text until next emoji-section or blank line
+  const emojiHeadRx =
+    /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+  const chunk: string[] = [];
+
+  for (let i = start + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (emojiHeadRx.test(line)) break;
+    chunk.push(line);
+  }
+
+  const joined = chunk.join(' ');
+  if (!joined) return '';
+
+  // 5. return first sentence + ellipsis
+  const firstSentence = joined.split(/[.!?]/)[0].trim();
+  return firstSentence ? `${firstSentence}…` : '';
+};
+
 // Utility function to format Printify description
 export const formatPrintifyDescription = (description: string): string => {
   if (!description) return ''
@@ -154,7 +191,7 @@ export const formatPrintifyDescription = (description: string): string => {
 }
 
 // Parse design highlights from the description
-export const parseDesignHighlights = (description: string): Array<{title: string, description: string}> => {
+export const parseDesignHighlights = (description: string) => {
   const highlights: Array<{title: string, description: string}> = []
   
   // Look for the Design Highlights section in the description

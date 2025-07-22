@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { HighlightItem } from '../../utils/extractDesignHighlights';
+import type { HighlightItem } from '../../utils/extractDesignHighlights'
 
 interface ProductGalleryProps {
   productName: string;
@@ -10,7 +10,6 @@ interface ProductGalleryProps {
   onImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
   designHighlights?: HighlightItem[];
 }
-
 
 const ProductGallery: React.FC<ProductGalleryProps> = ({
   productName,
@@ -68,6 +67,21 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
         transition={{ duration: 0.6 }}
         className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-white/40 shadow-xl"
       >
+        {/* Design Highlights Button - absolute on image card */}
+        {designHighlights.length > 0 && (
+          <button
+            ref={highlightsBtnRef}
+            type="button"
+            className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 bg-gradient-to-r from-orange-400 to-amber-400 text-white font-semibold text-xs px-3 py-1.5 rounded-full shadow-md border border-orange-300 hover:scale-105 transition focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
+            onClick={() => setShowHighlights(true)}
+            aria-haspopup="dialog"
+            aria-expanded={showHighlights}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.05 17.95l-1.414 1.414m12.728 0l-1.414-1.414M6.05 6.05L4.636 4.636" /></svg>
+            Design&nbsp;Highlights
+          </button>
+        )}
+
         <img
           src={mainImage}
           alt={productName}
@@ -75,21 +89,6 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
           onError={onImageError}
         />
       </motion.div>
-
-      {/* Design Highlights Button - absolute on image card */}
-      {designHighlights.length > 0 && (
-        <button
-          ref={highlightsBtnRef}
-          type="button"
-          className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 bg-gradient-to-r from-orange-400 to-amber-400 text-white font-semibold text-xs px-3 py-1.5 rounded-full shadow-md border border-orange-300 hover:scale-105 transition focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
-          onClick={() => setShowHighlights(true)}
-          aria-haspopup="dialog"
-          aria-expanded={showHighlights}
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.05 17.95l-1.414 1.414m12.728 0l-1.414-1.414M6.05 6.05L4.636 4.636" /></svg>
-          Design&nbsp;Highlights
-        </button>
-      )}
 
       {/* Modal for Design Highlights */}
       <AnimatePresence>
@@ -124,8 +123,8 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
               <h2 className="text-lg font-bold text-orange-500 mb-4">Design Highlights</h2>
 
               <ul className="space-y-3 text-sm leading-relaxed text-gray-800 list-none">
-                {designHighlights.map(({ label, detail }: { label: string; detail: string }, idx: number) => (
-                  <li key={idx} className="flex gap-2">
+                {designHighlights.map(({ label, detail }, idx) => (
+                  <li key={label + idx} className="grid grid-cols-[max-content_1fr] gap-x-2">
                     <span className="font-semibold text-orange-500">{label}:</span>
                     <span className="flex-1">{detail}</span>
                   </li>
