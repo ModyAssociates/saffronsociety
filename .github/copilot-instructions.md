@@ -1,3 +1,12 @@
+# Policy: No Test or Dummy Data
+Never use test data, dummy data, or hardcoded mock data in any part of the codebase. All data must be sourced from the real backend/API or actual production data sources as per project architecture. The only exception is the use of designated production fallback assets (such as `/assets/logo_big.png` for images) when required for error handling or missing data.
+
+- Do not use placeholder product info, fake products, or demo color swatches.
+- Do not use mock data imports in any frontend or backend code.
+- Remove or refactor any code that references local mock data, except for legacy fallback logic that is being actively replaced.
+- If a fallback is required, use only production assets or error handling as specified in project documentation.
+
+**This policy must be reflected in all future code reviews and PRs.**
 # Copilot Instructions for saffronsociety
 You are working on Saffron Society, a React + Vite + Tailwind t-shirt e-commerce SPA deployed to Netlify.
 Use functional React 19 components, Tailwind 4 utility classes, and Framer-Motion for subtle UI motion.
@@ -8,7 +17,7 @@ Keep everything ESM, no CommonJS imports.
 - **Type:** Full-stack T-shirt ecommerce app
 - **Frontend:** React (TypeScript, Vite, Tailwind CSS, Framer Motion)
 - **Backend/API:** Netlify Functions (Node.js, Printify API proxy)
-- **Data Source:** Printify API (real products/colors/images), with fallback to local mock data
+- **Data Source:** Printify API (real products/colors/images)
 
 
 ## Key Architecture & Data Flow
@@ -20,8 +29,7 @@ Keep everything ESM, no CommonJS imports.
 - **API Layer**:
   - Netlify function: `netlify/functions/printify-products.js` fetches product data from Printify, extracts color and image info, and returns a normalized payload
   - Environment variables for Printify API token/shop are set in `netlify.toml` and injected by Netlify dev
-- **Mock Data**:
-  - Used if Printify API is unavailable or returns no products, see `src/data/products.ts`
+
 
 ## Key Guidelines
 1. Make sure to evaluate the components you're creating, and whether they need 'use client'
@@ -47,7 +55,7 @@ Keep everything ESM, no CommonJS imports.
   - Color mapping for names/hex in `printify.ts` (see `COLOR_NAME_TO_HEX`)
 
 ## Project-Specific Patterns
-- **API fallback:** Always provide mock data if API fails (see `fetchProducts` in `data/products.ts`)
+- **API fallback:** If the Printify API fails, only use production fallback assets (such as `/assets/logo_big.png` for images). Do not use or add any mock product data or demo content.
 - **Component conventions:**
   - Use Framer Motion for animations
   - Use Tailwind for all styling
@@ -59,13 +67,13 @@ Keep everything ESM, no CommonJS imports.
 - `project/src/services/printify.ts` — Product fetching, color mapping
 - `netlify/functions/printify-products.js` — API proxy/function
 - `project/src/components/product/ProductCard.tsx` — Product card UI, image/color logic
-- `project/src/data/products.ts` — Mock product data
+
 - `netlify.toml` — Netlify/Printify config
 
 ## Example: Adding a New Product Source
 - Add a new Netlify function in `netlify/functions/`
 - Update `services/printify.ts` to fetch/normalize new data
-- Add fallback logic in `data/products.ts`
+
 
 ---
 

@@ -1,0 +1,223 @@
+import { Product } from '../types'
+import { decodeHTMLEntities } from '../utils/productUtils'
+
+export const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL']
+
+export const COLOR_NAME_TO_HEX: Record<string, string> = {
+  // Mappings from user's table: Printify HEX -> Nearest Gildan Color (using Gildan HEX as value for consistency)
+  "#000000": "#25282A",  // Black
+  "#DCD2BE": "#D7D2CB",  // Ice Grey
+  "#642838": "#5B2B42",  // Maroon
+  "#31221D": "#382F2D",  // Dark Chocolate
+  "#005C70": "#005D6F",  // Galapagos Blue
+  "#FF8E9D": "#DD74A1",  // Azalea
+  "#FFFFFF": "#FFFFFF",  // White / PFD White
+  "#F7E1B0": "#F4D1A1",  // Vegas Gold
+  "#FFF6E3": "#FFFFFF",  // White / PFD White
+  "#223B26": "#273B33",  // Forest
+  "#454545": "#333F48",  // Heather Navy
+  "#274D91": "#224D8F",  // Royal
+  "#1A2237": "#263147",  // Navy
+  "#A82235": "#AC2B37",  // Cherry Red
+  "#B54557": "#B15533",  // Texas Orange
+  "#F6F6F6": "#FFFFFF",  // White / PFD White
+  "#D3D590": "#F4D1A1",  // Vegas Gold (closest)
+  "#6A798E": "#4D6995",  // Heather Indigo
+  "Amethyst": "#6c4b94",
+  "Antique Cherry Red": "#971b2f",
+  "Antique Heliconia": "#aa0061",
+  "Antique Irish Green": "#00843d",
+  "Antique Jade Dome": "#006269",
+  "Antique Orange": "#b33d26",
+  "Antique Royal": "#003087",
+  "Antique Sapphire": "#006a8e",
+  "Ash": "#c8c9c7",
+  "Ash Grey": "#c8c9c7",
+  "Azalea": "#dd74a1",
+  "Baby Blue": "#69b3e7",
+  "Berry": "#7f2952",
+  "Black": "#25282a",
+  "Blackberry": "#221c35",
+  "Blue Dusk": "#253746",
+  "Bright Salmon": "#e5554f",
+  "Brown Savana": "#7a6855",
+  "Cactus": "#788a7a",
+  "Cardinal Red": "#8a1538",
+  "Caribbean Blue": "#00a9ce",
+  "Caribbean Mist": "#00a9ce",
+  "Carolina Blue": "#7ba4db",
+  "Carolina Blue Mist": "#7ba4db",
+  "Cement": "#aeaeae",
+  "Chalky Mint": "#5cb8b2",
+  "Chambray": "#bdd6e6",
+  "Charcoal": "#66676c",
+  "Charity Pink": "#f8a3bc",
+  "Cherry Red": "#ac2b37",
+  "Chestnut": "#83635c",
+  "Cobalt": "#171c8f",
+  "Coral Silk": "#fb637e",
+  "Cornsilk": "#f0ec74",
+  "Daisy": "#fed101",
+  "Dark Chocolate": "#382f2d",
+  "Dark Heather": "#425563",
+  "Dune Mist": "#7a7256",
+  "Dusty Rose": "#e1bbb4",
+  "Electric Green": "#43b02a",
+  "Flo Blue": "#5576d1",
+  "Forest": "#273b33",
+  "Galapagos Blue": "#005d6f",
+  "Garnet": "#7d2935",
+  "Gold": "#eead1a",
+  "Graphite Heather": "#707372",
+  "Gravel": "#888b8d",
+  "Gunmetal": "#939694",
+  "Heather Berry": "#994878",
+  "Heather Blue": "#3a5dae",
+  "Heather Bronze": "#c04c36",
+  "Heather Cardinal": "#9b2743",
+  "Heather Caribbean Blue": "#00afd7",
+  "Heather Coral Silk": "#ff808b",
+  "Heather Dark Green": "#3e5d58",
+  "Heather Grey": "#9ea2a2",
+  "Heather Heliconia": "#e24585",
+  "Heather Indigo": "#4d6995",
+  "Heather Irish Green": "#5caa7f",
+  "Heather Maroon": "#672e45",
+  "Heather Military Green": "#7e7f74",
+  "Heather Navy": "#333f48",
+  "Heather Orange": "#ff8d6d",
+  "Heather Purple": "#614b79",
+  "Heather Radiant Orchid": "#a15a95",
+  "Heather Red": "#bf0d3e",
+  "Heather Royal": "#307fe2",
+  "Heather Sapphire": "#0076a8",
+  "Heather Seafoam": "#40c1ac",
+  "Heather Sport Dark Maroon": "#651d32",
+  "Heather Sport Dark Navy": "#595478",
+  "Heather Sport Royal": "#1d4f91",
+  "Heather Sport Scarlet Red": "#b83a4b",
+  "Heliconia": "#db3e79",
+  "Honey": "#edaesa",
+  "Ice Grey": "#d7d2cb",
+  "Indigo Blue": "#486d87",
+  "Iris": "#3975b7",
+  "Irish Green": "#00a74a",
+  "Island Reef": "#8fd6bd",
+  "Jade Dome": "#00857d",
+  "Kelly": "#00805e",
+  "Kelly Green": "#00805e",
+  "Kelly Mist": "#00805e",
+  "Kiwi": "#89a84f",
+  "Lagoon Blue": "#4ac3e0",
+  "Legion Blue": "#1f495b",
+  "Light Blue": "#a3b3cb",
+  "Light Pink": "#e4c6d4",
+  "Lilac": "#563d82",
+  "Lime": "#92bf55",
+  "Marbled Charcoal": "#66676c",
+  "Marbled Galapagos Blue": "#005d6f",
+  "Marbled Heliconia": "#db3e79",
+  "Marbled Navy": "#263147",
+  "Marbled Royal": "#224d8f",
+  "Maroon": "#5b2b42",
+  "Maroon Mist": "#6d273c",
+  "Meadow": "#046a38",
+  "Metro Blue": "#464e7e",
+  "Midnight": "#005670",
+  "Military Green": "#5e7461",
+  "Mint Green": "#a0cfab",
+  "Moss": "#3d441e",
+  "Mustard": "#c3964d",
+  "Natural": "#e7ceb5",
+  "Navy": "#263147",
+}
+
+export const getProductInfoSections = (product: Product) => [
+  {
+    id: 'about',
+    title: 'About product',
+    content: {
+      designTitle: decodeHTMLEntities(product.name),
+      designDescription: decodeHTMLEntities(product.description || 'Express yourself with this unique design from Saffron Society. Our premium quality t-shirts combine comfort with style, perfect for making a statement wherever you go.'),
+      features: [
+        'Premium quality cotton construction',
+        'Vibrant, long-lasting print', 
+        'Comfortable unisex fit',
+        'Ethically sourced and produced'
+      ]
+    }
+  },
+  {
+    id: 'details',
+    title: 'Product details',
+    content: [
+      {
+        title: 'Without side seams',
+        description: 'Knitted in one piece using tubular knit, it reduces fabric waste and makes the garment more attractive'
+      },
+      {
+        title: 'Ribbed knit collar without seam',
+        description: 'Ribbed knit makes the collar highly elastic and helps retain its shape'
+      },
+      {
+        title: 'Shoulder tape',
+        description: 'Twill tape covers the shoulder seams to stabilize the back of the garment and prevent stretching'
+      },
+      {
+        title: 'Fiber composition',
+        description: 'Solid colors are 100% cotton; Heather colors are 50% cotton, 50% polyester (Sport Grey is 90% cotton, 10% polyester); Antique colors are 90% cotton, 10% polyester'
+      },
+      {
+        title: 'Bigger shirt size',
+        description: 'The t-shirt runs bigger than usual giving extra space for comfort'
+      },
+      {
+        title: 'Fabric',
+        description: 'Environmentally-friendly manufactured cotton that gives thicker vintage feel to the shirt. Long-lasting garment suitable for everyday use. The "Natural" color is made with unprocessed cotton, which results in small black flecks throughout the fabric'
+      },
+      {
+        title: 'Age restrictions',
+        description: 'For adults and teens'
+      },
+      {
+        title: 'Other compliance information',
+        description: 'Meets the formaldehyde, phthalates, lead and flammability level requirements.'
+      }
+    ]
+  },
+  {
+    id: 'care',
+    title: 'Care instructions',
+    content: [
+      'Machine wash: cold (max 30C or 90F)',
+      'Non-chlorine: bleach as needed',
+      'Do not tumble dry',
+      'Do not iron',
+      'Do not dryclean'
+    ]
+  },
+  {
+    id: 'shipping',
+    title: 'Shipping & delivery',
+    content: 'Accurate shipping options will be available in checkout after entering your full address.'
+  },
+  {
+    id: 'returns',
+    title: '30 day return policy',
+    content: `Any goods purchased can only be returned in accordance with the Terms and Conditions and Returns Policy.
+
+We want to make sure that you are satisfied with your order and we are committed to making things right in case of any issues. We will provide a solution in cases of any defects if you contact us within 30 days of receiving your order.
+
+See Terms of Use`
+  },
+  {
+    id: 'gpsr',
+    title: 'GPSR',
+    content: {
+      euRep: 'EU representative: Saffron Society, support@saffronsociety.com, 21 Attlebery Crescent, Paris, ON, N3L0H9, CA',
+      productInfo: 'Product information: Gildan 2000, 2 year warranty in EU and Northern Ireland as per Directive 1999/44/EC',
+      warnings: 'Warnings, Hazard: For adults',
+      care: 'Care instructions: Machine wash: cold (max 30C or 90F), Non-chlorine: bleach as needed, Do not tumble dry, Do not iron, Do not dryclean'
+    }
+  }
+]

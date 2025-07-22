@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        playfair: ['"Playfair Display"', 'serif'],
+      },
       colors: {
         orange: {
           50: '#fff7ed',

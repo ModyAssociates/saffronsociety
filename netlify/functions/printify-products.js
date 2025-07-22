@@ -32,6 +32,7 @@ export default async (req, context) => {
     // If no credentials, return mock data
     if (!shopId || !apiToken || shopId === 'YOUR_PRINTIFY_SHOP_ID') {
       console.log('[printify-products] Using mock data (no valid credentials)');
+      const now = new Date();
       const mockProducts = [
         {
           id: "1",
@@ -55,7 +56,8 @@ export default async (req, context) => {
             { id: "v2", title: "Black / M", price: 21.37, is_enabled: true },
             { id: "v3", title: "White / S", price: 21.37, is_enabled: true },
             { id: "v4", title: "Navy / S", price: 21.37, is_enabled: true }
-          ]
+          ],
+          createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
         },
         {
           id: "2", 
@@ -78,7 +80,8 @@ export default async (req, context) => {
             { id: "v3", title: "Navy / S", price: 24.99, is_enabled: true },
             { id: "v4", title: "Navy / M", price: 24.99, is_enabled: true },
             { id: "v5", title: "Maroon / S", price: 24.99, is_enabled: true }
-          ]
+          ],
+          createdAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString() // 10 days ago
         },
         {
           id: "3",
@@ -101,7 +104,8 @@ export default async (req, context) => {
             { id: "v5", title: "Maroon / S", price: 26.99, is_enabled: true },
             { id: "v6", title: "Maroon / M", price: 26.99, is_enabled: true },
             { id: "v7", title: "Forest / S", price: 26.99, is_enabled: true }
-          ]
+          ],
+          createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago
         },
         {
           id: "4",
@@ -125,7 +129,8 @@ export default async (req, context) => {
             { id: "v7", title: "Royal / S", price: 28.99, is_enabled: true },
             { id: "v8", title: "Royal / M", price: 28.99, is_enabled: true },
             { id: "v9", title: "Cherry Red / S", price: 28.99, is_enabled: true }
-          ]
+          ],
+          createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString() // 20 days ago
         }
       ];
       
@@ -189,7 +194,7 @@ export default async (req, context) => {
 
       // Get the first available image
       const firstImage = product.images?.[0]?.src || '/assets/logo_big.png';
-      
+
       // Calculate price - get the minimum price from enabled variants
       let minPrice = 24.99;
       if (product.variants && product.variants.length > 0) {
@@ -204,6 +209,74 @@ export default async (req, context) => {
         }
       }
 
+      // Group images by color and position
+      // 1. Build a map of variantId -> colorName
+      const variantIdToColor = {};
+      (product.variants || []).forEach(v => {
+        if (v.is_enabled && v.id && v.title) {
+          const parts = v.title.split(' / ');
+          if (parts.length >= 2) {
+            const colorName = parts[0].trim();
+            variantIdToColor[v.id] = colorName;
+          }
+        }
+      });
+
+      // 2. Build imagesByColor: { [colorName]: { main: string, angles: string[], models: string[] } }
+      const imagesByColor = {};
+      // Canonical Printify orientation strings (from API docs)
+      // We'll collect all unique positions from the product's images
+      const enabledVariantIds = (product.variants || []).filter(v => v.is_enabled).map(v => v.id);
+      // Collect all unique positions from images
+      const allPositions = Array.from(new Set((product.images || []).map(img => (img.position || '').toLowerCase()).filter(Boolean)));
+      (product.images || []).forEach(img => {
+        const pos = (img.position || '').toLowerCase();
+        // For each variant this image applies to
+        (img.variant_ids || []).forEach(variantId => {
+          const colorName = variantIdToColor[variantId];
+          if (!colorName) return;
+          if (!imagesByColor[colorName]) {
+            imagesByColor[colorName] = { main: '', angles: {}, models: [] };
+          }
+          // Main image: is_default true or first front image
+          if (img.is_default && !imagesByColor[colorName].main) {
+            imagesByColor[colorName].main = img.src;
+          }
+          // Group by exact position string
+          if (pos) {
+            if (!imagesByColor[colorName].angles[pos]) {
+              imagesByColor[colorName].angles[pos] = [];
+            }
+            imagesByColor[colorName].angles[pos].push(img.src);
+          }
+        });
+        // Model/lifestyle images: if this image applies to all enabled variants, treat as model/lifestyle
+        if (
+          Array.isArray(img.variant_ids) &&
+          enabledVariantIds.length > 0 &&
+          img.variant_ids.length === enabledVariantIds.length &&
+          img.variant_ids.every(id => enabledVariantIds.includes(id))
+        ) {
+          // Add to all colors as model image
+          Object.keys(imagesByColor).forEach(colorName => {
+            imagesByColor[colorName].models.push(img.src);
+          });
+        }
+      });
+      // Fallback: if no main, use front, then any angle, then model, then any image
+      Object.values(imagesByColor).forEach(obj => {
+        if (!obj.main) {
+          if (obj.angles['front'] && obj.angles['front'][0]) obj.main = obj.angles['front'][0];
+          else if (Object.values(obj.angles).flat()[0]) obj.main = Object.values(obj.angles).flat()[0];
+          else if (obj.models[0]) obj.main = obj.models[0];
+          else obj.main = firstImage;
+        }
+      });
+      // Fallback: if no main, use first angle or any image
+      Object.values(imagesByColor).forEach(obj => {
+        if (!obj.main) obj.main = obj.angles[0] || obj.models[0] || firstImage;
+      });
+
       const transformedProduct = {
         id: product.id,
         title: product.title,
@@ -212,6 +285,7 @@ export default async (req, context) => {
         price: minPrice,
         image: firstImage,
         images: product.images?.map(img => img.src) || [firstImage],
+        imagesByColor, // <-- new field
         colors,
         category: 'T-Shirts',
         tags: Array.isArray(product.tags) ? product.tags : ['bollywood', 'vintage'],
@@ -221,29 +295,23 @@ export default async (req, context) => {
           const extractSizeFromTitle = (title) => {
             const sizeMatch = title.match(/\b(XS|S|M|L|XL|XXL|2XL|3XL|4XL|5XL)\b/i);
             if (!sizeMatch) return undefined;
-            
             const size = sizeMatch[1].toUpperCase();
-            
-            // Normalize size naming to match UI conventions
             if (size === 'XXL') return '2XL';
-            
             return size;
           };
-
           const extractColorFromTitle = (title) => {
             const parts = title.split(' / ');
             return parts.length >= 2 ? parts[0].trim() : undefined;
           };
-
           return {
             ...v,
             price: parseFloat(v.price) > 100 ? parseFloat(v.price) / 100 : parseFloat(v.price),
             size: extractSizeFromTitle(v.title),
             color: extractColorFromTitle(v.title)
           };
-        }) || []
+        }) || [],
+        createdAt: product.created_at || product.createdAt || new Date().toISOString()
       };
-      
       console.log('[printify-products] Transformed product colors for', product.title, ':', colors);
       return transformedProduct;
     }) || [];

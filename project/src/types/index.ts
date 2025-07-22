@@ -5,6 +5,13 @@ export interface Product {
   price: number;
   image: string | { src: string };  // Main image
   images?: string[];  // Array of all product images
+  imagesByColor?: {
+    [colorName: string]: {
+      main: string;
+      angles: string[];
+      models: string[];
+    }
+  };
   category: string;
   tags: string[];
   sizes: string[];
@@ -21,6 +28,7 @@ export interface Product {
     size?: string;
     color?: string;
   }>;
+  createdAt?: string; // ISO date string for when the product was added
 }
 
 export interface PrintifyProduct {
