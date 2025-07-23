@@ -15,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
+  isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
 
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const isAuthenticated = !!user;
 
   /* ---------- supabase not configured ---------- */
   if (!supabase) {
@@ -60,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user: null,
           profile: null,
           session: null,
+          isAuthenticated: false,
           isAdmin: false,
           loading: false,
           signIn: async () =>
@@ -193,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         profile,
         session,
+        isAuthenticated,
         isAdmin: profile?.role === 'admin',
         loading,
         signInWithEmail,
