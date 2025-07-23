@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';          // yarn add react-icons
+import { FaFacebook } from 'react-icons/fa';        // yarn add react-icons
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -13,6 +14,7 @@ const Login = () => {
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
+    signInWithFacebook,
     /* legacy aliases (still available just in case) */
     signIn,
     signUp,
@@ -54,14 +56,12 @@ const Login = () => {
             formData.password,
             formData.fullName,
           );
-
         navigate('/account');
       } else {
         if (signInWithEmail)
           await signInWithEmail(formData.email, formData.password);
         else await signIn(formData.email, formData.password);
-
-        navigate(from, { replace: true });
+        navigate('/account');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -129,7 +129,6 @@ const Login = () => {
           </span>
         </button>
 
-        {/* (optional)
         <button
           type="button"
           onClick={signInWithFacebook}
@@ -140,7 +139,6 @@ const Login = () => {
             Continue with Facebook
           </span>
         </button>
-        */}
 
         <div className="flex items-center gap-2 my-4">
           <hr className="flex-1 border-gray-300" />

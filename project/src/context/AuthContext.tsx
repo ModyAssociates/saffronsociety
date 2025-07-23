@@ -136,13 +136,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = signUpWithEmail;
 
   /* ----------------- oauth helpers ----------------- */
-  const buildRedirect = () => `${window.location.origin}/account`;
+  // The origin we want Supabase to send the browser back to.
+  // Falls back to the current tab’s origin when the env-var is missing.
+  const REDIRECT_BASE = import.meta.env.VITE_REDIRECT_BASE_URL || window.location.origin;
+
+  const buildRedirect = (path = '/account') => `${REDIRECT_BASE}${path}`;
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: buildRedirect(),
+        redirectTo: buildRedirect('/auth/callback'),
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     });
@@ -152,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithFacebook = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
-      options: { redirectTo: buildRedirect() },
+      options: { redirectTo: buildRedirect('/auth/callback') },
     });
     if (error) throw error;
   };
