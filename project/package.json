@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --report-unused-disable-directives --max-warnings 0"
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --report-unused-disable-directives --max-warnings 0" 
   },
   "dependencies": {
     "@fontsource/playfair-display": "^5.2.6",
