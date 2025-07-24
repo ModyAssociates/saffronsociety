@@ -6,11 +6,16 @@ import { formatPrintifyDescription } from '../../utils/productUtils'
 import { Product } from '../../types'
 
 interface ProductInfoSectionsProps {
-  product: Product
+  product: Product;
+  expandedSections?: Set<string>;
+  setExpandedSections?: React.Dispatch<React.SetStateAction<Set<string>>>;
+  returnsRef?: React.RefObject<HTMLDivElement>;
 }
 
-const ProductInfoSections: React.FC<ProductInfoSectionsProps> = ({ product }) => {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['about']))
+const ProductInfoSections: React.FC<ProductInfoSectionsProps> = ({ product, expandedSections: expandedSectionsProp, setExpandedSections: setExpandedSectionsProp, returnsRef }) => {
+  const [internalExpandedSections, internalSetExpandedSections] = useState<Set<string>>(new Set(['about']));
+  const expandedSections = expandedSectionsProp ?? internalExpandedSections;
+  const setExpandedSections = setExpandedSectionsProp ?? internalSetExpandedSections;
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => {
@@ -34,7 +39,11 @@ const ProductInfoSections: React.FC<ProductInfoSectionsProps> = ({ product }) =>
       className="bg-white/70 backdrop-blur-lg rounded-2xl border border-white/40 shadow-xl overflow-hidden"
     >
       {sections.map((section) => (
-        <div key={section.id} className="border-b border-white/30 last:border-b-0">
+        <div
+          key={section.id}
+          className="border-b border-white/30 last:border-b-0"
+          ref={section.id === 'returns' && returnsRef ? returnsRef : undefined}
+        >
           <motion.button
             whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
             onClick={() => toggleSection(section.id)}
@@ -153,7 +162,7 @@ const ProductInfoSections: React.FC<ProductInfoSectionsProps> = ({ product }) =>
                           {paragraph.includes('Terms of Use') ? (
                             <>
                               {paragraph.split('Terms of Use')[0]}
-                              <a href="/terms" className="text-orange-500 hover:text-orange-600 underline">
+                              <a href="/terms-of-use" className="text-orange-500 hover:text-orange-600 underline">
                                 Terms of Use
                               </a>
                             </>

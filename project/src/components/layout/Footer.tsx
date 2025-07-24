@@ -38,6 +38,18 @@ export default function Footer() {
             <p className="text-gray-400 text-sm">
               Email: hello@saffronsociety.com
             </p>
+            <ul className="mt-4 space-y-2 text-sm">
+              <li>
+                <Link to="/privacy-policy" className="text-gray-400 hover:text-white transition">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms-of-use" className="text-gray-400 hover:text-white transition">
+                  Terms of Use
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
         

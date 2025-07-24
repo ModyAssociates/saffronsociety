@@ -9,6 +9,7 @@ import ProductGallery from '../components/product/ProductGallery';
 import { extractDesignHighlights, HighlightItem } from '../utils/extractDesignHighlights';
 import ProductOptions from '../components/product/ProductOptions';
 import ProductInfoSections from '../components/product/ProductInfoSections';
+import { useRef } from 'react';
 import { AVAILABLE_SIZES, COLOR_NAME_TO_HEX } from '../constants/productConstants';
 import { decodeHTMLEntities } from '../utils/productUtils';
 import { motion } from 'framer-motion';
@@ -25,6 +26,8 @@ const ProductDetails = () => {
   const [selectedSize, setSelectedSize] = useState<string>(AVAILABLE_SIZES[2]);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   const [quantity, setQuantity] = useState(1);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['about']));
+  const returnsRef = useRef<HTMLDivElement | null>(null);
 
   // Design Highlights state for client-side extraction
   const [designHighlights, setDesignHighlights] = useState<HighlightItem[]>([]);
@@ -292,10 +295,19 @@ const ProductDetails = () => {
               <div className="border-t border-white/40 pt-4 space-y-3">
                 <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
                   <Package className="w-4 h-4 text-orange-500" />
-                  <span>30 days return policy.</span>
-                  <a href="/terms" className="text-orange-600 hover:text-orange-700 underline font-semibold">
-                    See details
-                  </a>
+              <span>30 days return policy.</span>
+              <button
+                type="button"
+                className="text-orange-600 hover:text-orange-700 underline font-semibold bg-transparent border-0 p-0 m-0 cursor-pointer"
+                onClick={() => {
+                  setExpandedSections(prev => new Set([...prev, 'returns']));
+                  setTimeout(() => {
+                    returnsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 100);
+                }}
+              >
+                See details
+              </button>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
@@ -306,7 +318,12 @@ const ProductDetails = () => {
             </div>
 
             {/* Product Information Sections */}
-            <ProductInfoSections product={product} />
+            <ProductInfoSections
+              product={product}
+              expandedSections={expandedSections}
+              setExpandedSections={setExpandedSections}
+              returnsRef={returnsRef}
+            />
           </div>
         </div>
       </div>
