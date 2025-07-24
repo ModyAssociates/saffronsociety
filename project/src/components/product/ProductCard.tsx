@@ -1,8 +1,8 @@
 /* src/components/product/ProductCard.tsx */
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Heart, HeartOff } from 'lucide-react';
 import type { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +28,76 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const { addItem } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Wishlist state
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistError, setWishlistError] = useState<string | null>(null);
+
+  // Check if product is in wishlist on mount (if user)
+  useEffect(() => {
+    if (!user || !isSupabaseAvailable()) return;
+    setWishlistLoading(true);
+    setWishlistError(null);
+    supabase!
+      .from('wishlist')
+      .select('product_id')
+      .eq('user_id', user.id)
+      .eq('product_id', product.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        setWishlisted(!!data && !error);
+        setWishlistLoading(false);
+        if (error) setWishlistError('Could not fetch wishlist status.');
+      })
+      .catch(() => {
+        setWishlistError('Could not fetch wishlist status.');
+        setWishlistLoading(false);
+      });
+  }, [user, product.id]);
+
+  // Wishlist handler
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWishlistError(null);
+    if (!user || !isSupabaseAvailable()) {
+      setWishlistError('Please log in to use wishlist.');
+      return;
+    }
+    setWishlistLoading(true);
+    // Optimistic UI update
+    setWishlisted((prev) => !prev);
+    try {
+      if (wishlisted) {
+        // Remove from wishlist
+        const { error } = await supabase!
+          .from('wishlist')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('product_id', product.id);
+        if (error) {
+          setWishlisted(true); // rollback
+          setWishlistError('Failed to remove from wishlist.');
+        }
+      } else {
+        // Add to wishlist
+        const { error } = await supabase!
+          .from('wishlist')
+          .upsert({ user_id: user.id, product_id: product.id });
+        if (error) {
+          setWishlisted(false); // rollback
+          setWishlistError('Failed to add to wishlist.');
+        }
+      }
+    } catch {
+      setWishlisted((prev) => !prev); // rollback
+      setWishlistError('Something went wrong.');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   /* ---------- fetch user prefs from Supabase ---------- */
   useEffect(() => {
@@ -64,20 +134,41 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   /* ---------------- cart handler ---------------- */
   const handleAddToCart = () => {
-    let color = product.colors?.[selectedColorIndex]?.hex ?? '#000000';
-    let size = product.sizes?.[0] ?? 'M';
+    const availableSizes = product.sizes || [];
+    const availableColors = product.colors || [];
+    const prefSize = userPrefs.size;
+    const prefColor = userPrefs.color;
 
-    if (userPrefs.size && product.sizes?.includes(userPrefs.size))
-      size = userPrefs.size;
-    if (
-      userPrefs.color &&
-      product.colors?.some(
-        c => c.hex.toLowerCase() === userPrefs.color!.toLowerCase(),
-      )
-    )
-      color = userPrefs.color!;
+    // Try to match preferred color by name or hex, case-insensitive
+    let matchedColorObj = undefined;
+    if (prefColor) {
+      matchedColorObj = availableColors.find(c =>
+        (c.hex && c.hex.toLowerCase() === prefColor.toLowerCase()) ||
+        (c.name && c.name.toLowerCase() === prefColor.toLowerCase())
+      );
+    }
+    // Normalize 2XL <-> XXL for comparison
+    function normalizeSize(size: string) {
+      if (!size) return '';
+      const s = size.trim().toUpperCase();
+      if (s === '2XL') return 'XXL';
+      if (s === 'XXL') return 'XXL';
+      return s;
+    }
+    const normalizedPrefSize = normalizeSize(prefSize || '');
+    const normalizedAvailableSizes = availableSizes.map(s => normalizeSize(s));
+    const hasValidSize = !!prefSize && normalizedAvailableSizes.includes(normalizedPrefSize);
+    const hasValidColor = !!matchedColorObj;
 
-    addItem(product, size, color);
+    // Debug logging (remove/comment out in production)
+    console.log('prefSize:', prefSize, 'availableSizes:', availableSizes, 'hasValidSize:', hasValidSize);
+    console.log('prefColor:', prefColor, 'availableColors:', availableColors, 'matchedColorObj:', matchedColorObj, 'hasValidColor:', hasValidColor);
+
+    if (hasValidSize && hasValidColor) {
+      addItem(product, prefSize, matchedColorObj.hex);
+    } else {
+      navigate(`/product/${product.id}`);
+    }
   };
 
   /* ---------------- why-snippet ---------------- */
@@ -97,6 +188,32 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/product/${product.id}`}>
         {/* image */}
         <div className="relative w-full aspect-[4/5] overflow-hidden">
+          {/* Wishlist heart icon */}
+          <button
+            type="button"
+            aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            onClick={wishlistLoading ? undefined : handleWishlistToggle}
+            className={`absolute top-2 left-2 z-10 bg-white/80 rounded-full p-1 hover:bg-pink-100 transition ${wishlistLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            disabled={wishlistLoading}
+          >
+            {wishlistLoading ? (
+              <span className="w-5 h-5 flex items-center justify-center">
+                <svg className="animate-spin h-5 w-5 text-pink-500" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              </span>
+            ) : wishlisted ? (
+              <Heart className="w-5 h-5 text-pink-500 fill-pink-500" fill="#ec4899" />
+            ) : (
+              <Heart className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          {wishlistError && (
+            <div className="absolute top-12 left-2 bg-red-100 text-red-700 text-xs rounded px-2 py-1 shadow z-20">
+              {wishlistError}
+            </div>
+          )}
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
               <div className="animate-spin h-8 w-8 rounded-full border-b-2 border-black" />

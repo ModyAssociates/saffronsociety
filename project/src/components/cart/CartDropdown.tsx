@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Trash2, Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext.tsx';
-import { hexToColorName } from '../../services/printify';
+import { getColorNameFromHex } from '../../constants/productConstants';
 import type { CartItem } from '../../types/cart';
 
 interface CartDropdownProps {
@@ -96,7 +96,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                         <div className="text-xs text-neutral-500 mt-1">
                           {item.selectedColor && (
                             <span>
-                              Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {hexToColorName(item.selectedColor)}
+                              Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {getColorNameFromHex(item.selectedColor)}
                             </span>
                           )}
                           {item.selectedSize && (

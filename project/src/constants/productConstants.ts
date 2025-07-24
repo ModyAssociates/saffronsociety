@@ -1,3 +1,32 @@
+// Utility to get color name from hex
+// Utility to get colour name from hex
+export function getColorNameFromHex(hex: string): string {
+  if (!hex) return hex;
+  const normalised = hex.trim().toLowerCase();
+
+  // 1️⃣  Does the hex match a VALUE in the table?
+  //     Only return the key if that key is already a human-readable name.
+  for (const [key, value] of Object.entries(COLOR_NAME_TO_HEX)) {
+    if (value.toLowerCase() === normalised && !key.startsWith('#')) {
+      return key;                        // e.g. "#AC2B37"  ->  "Cherry Red"
+    }
+  }
+
+  // 2️⃣  Does the hex match a KEY in the table?
+  for (const [key, value] of Object.entries(COLOR_NAME_TO_HEX)) {
+    if (key.toLowerCase() === normalised) {
+      if (key.startsWith('#')) {
+        // Key itself is a hex code – follow the mapping once more
+        // so "#A82235"  ->  "#AC2B37"  ->  "Cherry Red"
+        return getColorNameFromHex(value);
+      }
+      return key;                       // key is already a colour name
+    }
+  }
+
+  // 3️⃣  Fallback – leave the hex untouched
+  return hex;
+}
 import { Product } from '../types'
 import { decodeHTMLEntities } from '../utils/productUtils'
 

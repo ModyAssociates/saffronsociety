@@ -35,7 +35,7 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (product?.description) {
-      console.log('[debug] raw product.description:', product.description);
+     // console.log('[debug] raw product.description:', product.description);
       setDesignHighlights(extractDesignHighlights(product.description));
     }
   }, [product?.description]);
