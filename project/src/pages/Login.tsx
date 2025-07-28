@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';          // yarn add react-icons
@@ -8,7 +8,6 @@ import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const {
     /* new helpers */
     signInWithEmail,
@@ -31,7 +30,6 @@ const Login = () => {
     phone: '',
   });
 
-  const from = (location.state as any)?.from?.pathname || '/';
 
   /* ------------------------------------------------------------------ */
   /*  SUBMIT (email / password)                                         */

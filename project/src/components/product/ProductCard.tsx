@@ -2,11 +2,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Heart, HeartOff } from 'lucide-react';
+import { ShoppingBag, Heart } from 'lucide-react';
 import type { Product } from '../../types';
 import {
-   AVAILABLE_SIZES,
-   COLOR_NAME_TO_HEX,
    getColorNameFromHex      // ← we’ll use this in a second
 } from "../../constants/productConstants";
 import { useCart } from '../../context/CartContext';
@@ -45,21 +43,25 @@ const ProductCard = ({ product }: ProductCardProps) => {
     if (!user || !isSupabaseAvailable()) return;
     setWishlistLoading(true);
     setWishlistError(null);
-    supabase!
-      .from('wishlist')
-      .select('product_id')
-      .eq('user_id', user.id)
-      .eq('product_id', product.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
+
+    const fetchWishlistStatus = async () => {
+      try {
+        const { data, error } = await supabase!
+          .from('wishlist')
+          .select('product_id')
+          .eq('user_id', user.id)
+          .eq('product_id', product.id)
+          .maybeSingle();
         setWishlisted(!!data && !error);
         setWishlistLoading(false);
         if (error) setWishlistError('Could not fetch wishlist status.');
-      })
-      .catch(() => {
+      } catch {
         setWishlistError('Could not fetch wishlist status.');
         setWishlistLoading(false);
-      });
+      }
+    };
+
+    fetchWishlistStatus();
   }, [user, product.id]);
 
   // Wishlist handler

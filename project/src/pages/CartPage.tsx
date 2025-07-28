@@ -3,11 +3,6 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
-import {
-   AVAILABLE_SIZES,
-   COLOR_NAME_TO_HEX,
-   getColorNameFromHex      // ← we’ll use this in a second
-} from "../constants/productConstants";
 import type { CartItem } from '../types/cart';
 
 const CartPage = () => {
@@ -21,11 +16,6 @@ const CartPage = () => {
     return `$${price.toFixed(2)}`;
   };
 
-  const stripHtml = (html: string) => {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
-  };
 
   if (items.length === 0) {
     return (

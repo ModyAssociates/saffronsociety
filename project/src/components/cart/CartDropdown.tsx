@@ -2,11 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Trash2, Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext.tsx';
-import {
-   AVAILABLE_SIZES,
-   COLOR_NAME_TO_HEX,
-   getColorNameFromHex      // ← we’ll use this in a second
-} from "../../constants/productConstants";
+// import { AVAILABLE_SIZES, COLOR_NAME_TO_HEX, getColorNameFromHex } from "../../constants/productConstants";
 import type { CartItem } from '../../types/cart';
 
 interface CartDropdownProps {
