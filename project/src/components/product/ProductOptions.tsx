@@ -1,6 +1,10 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { AVAILABLE_SIZES, COLOR_NAME_TO_HEX } from '../../constants/productConstants'
+import {
+   AVAILABLE_SIZES,
+   COLOR_NAME_TO_HEX,
+   getColorNameFromHex      // ← we’ll use this in a second
+} from "../../constants/productConstants";
 
 interface ProductOptionsProps {
   colors: any[]
@@ -9,7 +13,6 @@ interface ProductOptionsProps {
   onColorSelect: (color: string) => void
   onSizeSelect: (size: string) => void
   isSizeAvailable: (size: string) => boolean
-  hexToName: (hex: string) => string
 }
 
 const ProductOptions: React.FC<ProductOptionsProps> = ({
@@ -19,7 +22,7 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({
   onColorSelect,
   onSizeSelect,
   isSizeAvailable,
-  hexToName
+  // removed hexToName
 }) => {
   return (
     <>
@@ -47,14 +50,14 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({
                       : 'border-white/60 hover:border-gray-400'
                   }`}
                   style={{ backgroundColor: colorHex }}
-                  title={colorName || hexToName(colorValue)}
+                  title={colorName || getColorNameFromHex(colorValue)}
                 />
               )
             })}
           </div>
           {selectedColor && (
             <p className="text-sm text-gray-600 mt-2 font-medium">
-              Selected: {colors?.find(c => c.hex === selectedColor)?.name || hexToName(selectedColor)}
+              Selected: {colors?.find(c => c.hex === selectedColor)?.name || getColorNameFromHex(selectedColor)}
             </p>
           )}
         </div>

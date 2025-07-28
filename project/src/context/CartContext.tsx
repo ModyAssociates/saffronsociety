@@ -5,14 +5,15 @@ interface CartItem {
   product: Product;
   quantity: number;
   selectedSize: string;
-  selectedColor: string;
+  selectedColorHex?: string;
+  selectedColorName?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, size: string, color: string, quantity?: number) => void;
-  removeItem: (productId: string, size: string, color: string) => void;
-  updateQuantity: (productId: string, size: string, color: string, quantity: number) => void;
+  addItem: (product: Product, size: string, colorHex: string, quantity?: number, colorName?: string) => void;
+  removeItem: (productId: string, size: string, colorHex: string) => void;
+  updateQuantity: (productId: string, size: string, colorHex: string, quantity: number) => void;
   clearCart: () => void;
   total: number;
   itemCount: number;
@@ -44,12 +45,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items]);
 
-  const addItem = (product: Product, size: string, color: string, quantity: number = 1) => {
+  const addItem = (product: Product, size: string, colorHex: string, quantity: number = 1, colorName?: string) => {
     setItems(current => {
       const existingIndex = current.findIndex(
         item => item.product.id === product.id && 
                 (item.selectedSize || '') === size && 
-                (item.selectedColor || '') === color
+                (item.selectedColorHex || '') === colorHex
       );
 
       if (existingIndex >= 0) {
@@ -58,40 +59,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return updated;
       }
 
-      return [...current, { product, quantity, selectedSize: size, selectedColor: color }];
+      return [
+        ...current,
+        {
+          product,
+          quantity,
+          selectedSize: size,
+          selectedColorHex: colorHex,
+          selectedColorName: colorName,
+        },
+      ];
     });
   };
 
-  const removeItem = (productId: string, size: string, color: string) => {
-    console.log('RemoveItem called with:', { productId, size, color });
-    console.log('Current cart items:', items.map(item => ({
-      id: item.product.id,
-      size: item.selectedSize,
-      color: item.selectedColor
-    })));
-    
-    setItems(current => {
-      const filtered = current.filter(item => 
-        !(item.product.id === productId && 
-          (item.selectedSize || '') === size && 
-          (item.selectedColor || '') === color)
-      );
-      console.log('Items after filter:', filtered.length, 'vs before:', current.length);
-      return filtered;
-    });
+  const removeItem = (productId: string, size: string, colorHex: string) => {
+    setItems(current =>
+      current.filter(item =>
+        !(item.product.id === productId &&
+          (item.selectedSize || '') === size &&
+          (item.selectedColorHex || '') === colorHex)
+      )
+    );
   };
 
-  const updateQuantity = (productId: string, size: string, color: string, quantity: number) => {
+  const updateQuantity = (productId: string, size: string, colorHex: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(productId, size, color);
+      removeItem(productId, size, colorHex);
       return;
     }
 
     setItems(current =>
       current.map(item =>
-        item.product.id === productId && 
-        (item.selectedSize || '') === size && 
-        (item.selectedColor || '') === color
+        item.product.id === productId &&
+        (item.selectedSize || '') === size &&
+        (item.selectedColorHex || '') === colorHex
           ? { ...item, quantity }
           : item
       )

@@ -4,6 +4,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Heart, HeartOff } from 'lucide-react';
 import type { Product } from '../../types';
+import {
+   AVAILABLE_SIZES,
+   COLOR_NAME_TO_HEX,
+   getColorNameFromHex      // ← we’ll use this in a second
+} from "../../constants/productConstants";
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeImageUrl } from '../../services/printify';
@@ -136,36 +141,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleAddToCart = () => {
     const availableSizes = product.sizes || [];
     const availableColors = product.colors || [];
-    const prefSize = userPrefs.size;
-    const prefColor = userPrefs.color;
-
-    // Try to match preferred color by name or hex, case-insensitive
-    let matchedColorObj = undefined;
-    if (prefColor) {
-      matchedColorObj = availableColors.find(c =>
-        (c.hex && c.hex.toLowerCase() === prefColor.toLowerCase()) ||
-        (c.name && c.name.toLowerCase() === prefColor.toLowerCase())
-      );
-    }
-    // Normalize 2XL <-> XXL for comparison
-    function normalizeSize(size: string) {
-      if (!size) return '';
-      const s = size.trim().toUpperCase();
-      if (s === '2XL') return 'XXL';
-      if (s === 'XXL') return 'XXL';
-      return s;
-    }
-    const normalizedPrefSize = normalizeSize(prefSize || '');
-    const normalizedAvailableSizes = availableSizes.map(s => normalizeSize(s));
-    const hasValidSize = !!prefSize && normalizedAvailableSizes.includes(normalizedPrefSize);
-    const hasValidColor = !!matchedColorObj;
-
-    // Debug logging (remove/comment out in production)
-    console.log('prefSize:', prefSize, 'availableSizes:', availableSizes, 'hasValidSize:', hasValidSize);
-    console.log('prefColor:', prefColor, 'availableColors:', availableColors, 'matchedColorObj:', matchedColorObj, 'hasValidColor:', hasValidColor);
-
-    if (hasValidSize && hasValidColor) {
-      addItem(product, prefSize, matchedColorObj.hex);
+    const selectedColorObj = availableColors[selectedColorIndex];
+    const selectedColorHex = selectedColorObj?.hex || '';
+    const selectedColorName = selectedColorObj?.name || getColorNameFromHex(selectedColorHex);
+    const selectedSize = userPrefs.size || availableSizes[0] || '';
+    if (selectedColorHex && selectedSize) {
+      addItem(product, selectedSize, selectedColorHex, 1, selectedColorName);
     } else {
       navigate(`/product/${product.id}`);
     }
@@ -253,7 +234,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {decodeHTMLEntities(product.name)}
           </h3>
 
-          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center justify-between mt-3">
             {/* price */}
             <span className="text-base font-bold text-gray-900">
               $
@@ -268,41 +249,49 @@ const ProductCard = ({ product }: ProductCardProps) => {
               ).toFixed(2)}
             </span>
 
-            {/* colour dots */}
-            <div className="flex gap-1">
-              {product.colors?.length ? (
-                <>
-                  {product.colors.slice(0, 3).map((c, idx) => (
-                    <button
-                      key={idx}
-                      onClick={e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedColorIndex(idx);
-                      }}
-                      title={c.name}
-                      className={`w-4 h-4 rounded-full border ${
-                        idx === selectedColorIndex
-                          ? 'border-gray-700 ring-2 ring-gray-700 ring-offset-1'
-                          : 'border-gray-300 hover:border-gray-500'
-                      }`}
-                      style={{ backgroundColor: c.hex }}
+            {/* colour dots and name */}
+            <div className="flex flex-col items-end">
+              <div className="flex gap-1 mb-1">
+                {product.colors?.length ? (
+                  <>
+                    {product.colors.slice(0, 3).map((c, idx) => (
+                      <button
+                        key={idx}
+                        onClick={e => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedColorIndex(idx);
+                        }}
+                        title={c.name}
+                        className={`w-4 h-4 rounded-full border ${
+                          idx === selectedColorIndex
+                            ? 'border-gray-700 ring-2 ring-gray-700 ring-offset-1'
+                            : 'border-gray-300 hover:border-gray-500'
+                        }`}
+                        style={{ backgroundColor: c.hex }}
+                      />
+                    ))}
+                    {product.colors.length > 3 && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        +{product.colors.length - 3}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  ['#000', '#fff', '#A82235'].map(hex => (
+                    <span
+                      key={hex}
+                      className="w-4 h-4 rounded-full border border-gray-300"
+                      style={{ backgroundColor: hex }}
                     />
-                  ))}
-                  {product.colors.length > 3 && (
-                    <span className="text-xs text-gray-500 ml-1">
-                      +{product.colors.length - 3}
-                    </span>
-                  )}
-                </>
-              ) : (
-                ['#000', '#fff', '#A82235'].map(hex => (
-                  <span
-                    key={hex}
-                    className="w-4 h-4 rounded-full border border-gray-300"
-                    style={{ backgroundColor: hex }}
-                  />
-                ))
+                  ))
+                )}
+              </div>
+              {/* Show selected color name */}
+              {product.colors?.length > 0 && (
+                <span className="text-xs text-gray-600 font-medium">
+                  {getColorNameFromHex(product.colors[selectedColorIndex]?.hex || '')}
+                </span>
               )}
             </div>
           </div>

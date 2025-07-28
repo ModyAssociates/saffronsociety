@@ -3,7 +3,11 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext.tsx';
-import { hexToColorName } from '../services/printify';
+import {
+   AVAILABLE_SIZES,
+   COLOR_NAME_TO_HEX,
+   getColorNameFromHex      // ← we’ll use this in a second
+} from "../constants/productConstants";
 import type { CartItem } from '../types/cart';
 
 const CartPage = () => {
@@ -40,7 +44,7 @@ const CartPage = () => {
             Looks like you haven't added any items to your cart yet.
             Browse our collection to find the perfect Bollywood-inspired tee for you.
           </p>
-          <Link to="/products" className="btn-primary">
+          <Link to="/shop" className="btn-primary">
             Continue Shopping
           </Link>
         </motion.div>
@@ -77,7 +81,7 @@ const CartPage = () => {
             {/* Cart Items */}
             {items.map((item: CartItem) => (
               <motion.div
-                key={item.product.id + '-' + (item.selectedColor || '') + '-' + (item.selectedSize || '')}
+                key={`${item.product.id}-${item.selectedSize}-${item.selectedColorHex || item.selectedColorName || 'no-color'}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -96,12 +100,11 @@ const CartPage = () => {
                     </h3>
                     
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>Color: 
-                        <span 
-                          className="inline-block w-4 h-4 rounded-full ml-1 mr-1 border border-gray-300"
-                          style={{ backgroundColor: item.selectedColor }}
-                        ></span>
-                        {hexToColorName(item.selectedColor || '')}
+                      <span>Color:
+                        <span className="inline-block w-4 h-4 rounded-full ml-1 mr-1 border border-gray-300" style={{ backgroundColor: item.selectedColorHex }}></span>
+                        {item.selectedColorName && (
+                          <span className="ml-1 text-xs text-neutral-700 font-medium">{item.selectedColorName}</span>
+                        )}
                       </span>
                       <span>Size: {item.selectedSize}</span>
                     </div>
@@ -117,7 +120,7 @@ const CartPage = () => {
                 <div className="col-span-2">
                   <div className="flex items-center justify-center border border-neutral-200 rounded-md max-w-32 mx-auto">
                     <button
-                      onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity - 1)}
+                      onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColorHex || '', item.quantity - 1)}
                       className="text-neutral-600 hover:text-maroon transition-colors p-2"
                       aria-label="Decrease quantity"
                     >
@@ -125,7 +128,7 @@ const CartPage = () => {
                     </button>
                     <span className="mx-3">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity + 1)}
+                      onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColorHex || '', item.quantity + 1)}
                       className="text-neutral-600 hover:text-maroon transition-colors p-2"
                       aria-label="Increase quantity"
                     >
@@ -142,12 +145,7 @@ const CartPage = () => {
                   {/* Delete Button (Desktop) */}
                   <button
                     onClick={() => {
-                      console.log('Removing item:', {
-                        productId: item.product.id,
-                        size: item.selectedSize || '',
-                        color: item.selectedColor || ''
-                      });
-                      removeItem(item.product.id, item.selectedSize || '', item.selectedColor || '');
+                      removeItem(item.product.id, item.selectedSize || '', item.selectedColorHex || '');
                     }}
                     className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                     aria-label="Remove item"

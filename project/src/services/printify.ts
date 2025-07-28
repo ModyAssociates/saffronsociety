@@ -1,68 +1,10 @@
 import { Product } from '../types';
+import { COLOR_NAME_TO_HEX, getColorNameFromHex } from '../constants/productConstants';
 
 const API_URL = '/.netlify/functions/printify-products';
 
-// Color mapping for Printify hex codes to Gildan color names
-export const COLOR_NAME_TO_HEX: Record<string, string> = {
-  'black': '#000000',
-  'white': '#FFFFFF',
-  'gray': '#808080',
-  'grey': '#808080',
-  'red': '#FF0000',
-  'blue': '#0000FF',
-  'navy': '#000080',
-  'green': '#008000',
-  'yellow': '#FFFF00',
-  'orange': '#FFA500',
-  'purple': '#800080',
-  'pink': '#FFC0CB',
-  'brown': '#964B00',
-  'beige': '#F5F5DC',
-  'tan': '#D2B48C',
-  'maroon': '#800000',
-  'olive': '#808000',
-  'lime': '#00FF00',
-  'aqua': '#00FFFF',
-  'teal': '#008080',
-  'silver': '#C0C0C0',
-  'gold': '#FFD700',
-  'coral': '#FF7F50',
-  'salmon': '#FA8072',
-  'khaki': '#F0E68C',
-  'crimson': '#DC143C',
-  'fuchsia': '#FF00FF',
-  'magenta': '#FF00FF',
-  'indigo': '#4B0082',
-  'turquoise': '#40E0D0',
-  'chocolate': '#D2691E',
-  'charcoal': '#36454F',
-  'heather': '#9D9D9D',
-  'burgundy': '#800020',
-  'lavender': '#E6E6FA',
-  'mint': '#3EB489',
-  'rose': '#FF007F',
-  'sand': '#C2B280',
-  'sky': '#87CEEB',
-  'steel': '#4682B4',
-  'stone': '#918A84',
-  'wine': '#722F37'
-};
-
-// Add the missing hexToColorName function
-export function hexToColorName(hex: string): string {
-  // Normalize the hex code
-  const normalizedHex = hex.toUpperCase()
-  
-  // Find the color name by hex value
-  for (const [name, hexValue] of Object.entries(COLOR_NAME_TO_HEX)) {
-    if (hexValue.toUpperCase() === normalizedHex) {
-      return name.charAt(0).toUpperCase() + name.slice(1)
-    }
-  }
-  
-  // Return the hex if no name match found
-  return hex
-}
+// Use getColorNameFromHex from productConstants for all color name lookups
+export { getColorNameFromHex };
 
 export async function fetchPrintifyProducts(): Promise<Product[]> {
   try {

@@ -2,7 +2,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Trash2, Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext.tsx';
-import { getColorNameFromHex } from '../../constants/productConstants';
+import {
+   AVAILABLE_SIZES,
+   COLOR_NAME_TO_HEX,
+   getColorNameFromHex      // ← we’ll use this in a second
+} from "../../constants/productConstants";
 import type { CartItem } from '../../types/cart';
 
 interface CartDropdownProps {
@@ -94,9 +98,9 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                         </p>
                         {/* Show color and size if available */}
                         <div className="text-xs text-neutral-500 mt-1">
-                          {item.selectedColor && (
+                          {item.selectedColorHex && (
                             <span>
-                              Color: <span style={{ backgroundColor: item.selectedColor }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {getColorNameFromHex(item.selectedColor)}
+                              Color: <span style={{ backgroundColor: item.selectedColorHex }} className="inline-block w-3 h-3 rounded-full align-middle mr-1 border" /> {item.selectedColorName}
                             </span>
                           )}
                           {item.selectedSize && (
@@ -106,7 +110,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                         {/* Quantity Control */}
                         <div className="flex items-center mt-2">
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity - 1)}
+                          onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColorHex || '', item.quantity - 1)}
                             className="text-neutral-600 hover:text-maroon transition-colors p-1"
                             aria-label="Decrease quantity"
                           >
@@ -114,7 +118,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                           </button>
                           <span className="mx-2 min-w-8 text-center">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColor || '', item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product.id, item.selectedSize || '', item.selectedColorHex || '', item.quantity + 1)}
                             className="text-neutral-600 hover:text-maroon transition-colors p-1"
                             aria-label="Increase quantity"
                           >
@@ -128,7 +132,7 @@ const CartDropdown = ({ isOpen, onClose }: CartDropdownProps) => {
                           {formatPrice(item.product.price * item.quantity)}
                         </span>
                         <button
-                          onClick={() => removeItem(item.product.id, item.selectedColor || '', item.selectedSize || '')}
+                          onClick={() => removeItem(item.product.id, item.selectedSize || '', item.selectedColorHex || '')}
                           className="text-neutral-400 hover:text-error-500 transition-colors mt-2"
                           aria-label={`Remove ${item.product.name} from cart`}
                         >
