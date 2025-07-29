@@ -17,6 +17,8 @@ import Admin from './pages/Admin';
 import OrderConfirmation from './pages/OrderConfirmation';
 import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/ProtectedRoute';
+import BlogPage from './pages/Blog';
+import BlogPostDetails from './pages/blog/[id]';
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/:id" element={<BlogPostDetails />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-use" element={<TermsOfUse />} />
                 <Route path="/login" element={<Login />} />

@@ -1,5 +1,5 @@
 /* src/components/product/ProductCard.tsx */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Heart } from 'lucide-react';
@@ -22,6 +22,8 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   /* ---------------- state ---------------- */
+  const [hasHovered, setHasHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -30,6 +32,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
   );
 
   const { addItem } = useCart();
+  // Add to Cart button ref (for accessibility/focus if needed)
+  const addToCartBtnRef = useRef<HTMLButtonElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -162,10 +166,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
   })();
 
   /* ---------------- render ---------------- */
+  // Micro-interaction: tear-open effect on first hover
+  const tearOpen = !hasHovered && isHovered;
   return (
     <motion.div
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        if (!hasHovered) setHasHovered(true);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
+      animate={tearOpen ? { rotate: 3, scale: 1.05 } : { rotate: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 20, duration: 0.25 }}
       className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group"
     >
       <Link to={`/product/${product.id}`}>
@@ -299,17 +312,24 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
 
           {/* add to cart */}
-          <div className="mt-4">
-            <button
+          <div className="mt-4 relative">
+            <motion.button
+              ref={addToCartBtnRef}
               onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleAddToCart();
               }}
-              className="w-full bg-black text-white text-sm py-2 px-4 rounded-md hover:bg-gray-900 transition-colors duration-200 flex items-center justify-center gap-2"
+              whileTap={{
+                backgroundColor: '#FBBF24',
+                color: '#1a1a1a',
+                boxShadow: '0 0 0 4px #FBBF24',
+                transition: { duration: 0.15 }
+              }}
+              className="w-full bg-black text-white text-sm py-2 px-4 rounded-md hover:bg-gray-900 transition-colors duration-200 flex items-center justify-center gap-2 relative focus:outline-none"
             >
               <ShoppingBag className="w-4 h-4" /> Add to Cart
-            </button>
+            </motion.button>
           </div>
 
           {/* why you'll love it */}

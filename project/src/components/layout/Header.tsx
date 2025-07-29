@@ -60,9 +60,10 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {[
+            {[ 
               { to: "/", label: "Home" },
               { to: "/shop", label: "Shop" },
+              { to: "/blog", label: "Blog" },
               { to: "/about", label: "About" }
             ].map((link) => (
               <motion.div key={link.to} whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
@@ -156,7 +157,7 @@ export default function Header() {
             {/* Cart Icon */}
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="relative">
               <Link to="/cart" className="relative p-2 rounded-full hover:bg-white/30 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]">
-                <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-orange-600 transition-colors" />
+                <ShoppingCart id="cart-icon-global" className="h-6 w-6 text-gray-700 hover:text-orange-600 transition-colors" />
                 {itemCount > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
@@ -192,9 +193,10 @@ export default function Header() {
             className="md:hidden bg-gradient-to-r from-orange-50 via-yellow-25 to-orange-100 border-t border-orange-200/50 backdrop-blur-sm"
           >
             <div className="px-4 py-2 space-y-1">
-              {[
+              {[ 
                 { to: "/", label: "Home" },
                 { to: "/shop", label: "Shop" },
+                { to: "/blog", label: "Blog" },
                 { to: "/about", label: "About" }
               ].map((link) => (
                 <Link
