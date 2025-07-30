@@ -31,16 +31,15 @@ const ProductOptions: React.FC<ProductOptionsProps> = ({
         <div className="mb-5">
           <h3 className="text-base font-semibold text-gray-800 mb-3">Color</h3>
           <div className="flex flex-wrap gap-2">
-            {colors.map((color) => {
+            {colors.map((color, idx) => {
               const colorValue = typeof color === 'string' ? color : (color.hex || color.name)
               const colorHex = typeof color === 'string' 
                 ? COLOR_NAME_TO_HEX[color] || color
                 : color.hex || COLOR_NAME_TO_HEX[color.name] || color.name
               const colorName = typeof color === 'string' ? color : color.name
-              
               return (
                 <motion.button
-                  key={colorValue}
+                  key={`${colorHex}-${colorName}-${idx}`}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => onColorSelect(colorValue)}

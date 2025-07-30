@@ -7,4 +7,5 @@ export interface CartItem {
   quantity: number;
   selectedColorHex?: string;
   selectedColorName?: string;
+  price: number;
 }

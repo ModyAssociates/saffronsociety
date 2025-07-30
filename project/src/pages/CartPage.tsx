@@ -103,7 +103,7 @@ const CartPage = () => {
 
                 {/* Price (Desktop) */}
                 <div className="hidden md:block col-span-2 text-center text-neutral-800 font-medium">
-                  {formatPrice(item.product.price)}
+                  {formatPrice(item.price ?? item.product.price)}
                 </div>
 
                 {/* Quantity */}
@@ -130,7 +130,7 @@ const CartPage = () => {
                 {/* Total */}
                 <div className="col-span-2 flex items-center justify-between md:justify-end">
                   <span className="font-semibold text-maroon">
-                    {formatPrice(item.product.price * item.quantity)}
+                    {formatPrice((item.price ?? item.product.price) * item.quantity)}
                   </span>
                   {/* Delete Button (Desktop) */}
                   <button

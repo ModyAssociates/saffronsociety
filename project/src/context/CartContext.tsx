@@ -7,11 +7,12 @@ interface CartItem {
   selectedSize: string;
   selectedColorHex?: string;
   selectedColorName?: string;
+  price: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, size: string, colorHex: string, quantity?: number, colorName?: string) => void;
+  addItem: (product: Product, size: string, colorHex: string, quantity?: number, colorName?: string, price?: number) => void;
   removeItem: (productId: string, size: string, colorHex: string) => void;
   updateQuantity: (productId: string, size: string, colorHex: string, quantity: number) => void;
   clearCart: () => void;
@@ -45,7 +46,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items]);
 
-  const addItem = (product: Product, size: string, colorHex: string, quantity: number = 1, colorName?: string) => {
+  const addItem = (product: Product, size: string, colorHex: string, quantity: number = 1, colorName?: string, price?: number) => {
     setItems(current => {
       const existingIndex = current.findIndex(
         item => item.product.id === product.id && 
@@ -56,6 +57,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (existingIndex >= 0) {
         const updated = [...current];
         updated[existingIndex].quantity += quantity;
+        // Always update price in case variant price changes
+        if (typeof price === 'number') updated[existingIndex].price = price;
         return updated;
       }
 
@@ -67,6 +70,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           selectedSize: size,
           selectedColorHex: colorHex,
           selectedColorName: colorName,
+          price: typeof price === 'number' ? price : product.price,
         },
       ];
     });
@@ -105,7 +109,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Calculate total with safety check
   const total = Array.isArray(items) 
-    ? items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+    ? items.reduce((sum, item) => sum + ((item.price ?? item.product.price) * item.quantity), 0)
     : 0;
   
   // Calculate item count with safety check

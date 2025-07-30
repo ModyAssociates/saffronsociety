@@ -1,5 +1,5 @@
 /* src/components/product/ProductCard.tsx */
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Heart } from 'lucide-react';
@@ -7,7 +7,6 @@ import type { Product } from '../../types';
 import {
    getColorNameFromHex      // ← we’ll use this in a second
 } from "../../constants/productConstants";
-import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeImageUrl } from '../../services/printify';
 import {
@@ -31,9 +30,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     {},
   );
 
-  const { addItem } = useCart();
   // Add to Cart button ref (for accessibility/focus if needed)
-  const addToCartBtnRef = useRef<HTMLButtonElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -144,19 +141,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
   })();
 
   /* ---------------- cart handler ---------------- */
-  const handleAddToCart = () => {
-    const availableSizes = product.sizes || [];
-    const availableColors = product.colors || [];
-    const selectedColorObj = availableColors[selectedColorIndex];
-    const selectedColorHex = selectedColorObj?.hex || '';
-    const selectedColorName = selectedColorObj?.name || getColorNameFromHex(selectedColorHex);
-    const selectedSize = userPrefs.size || availableSizes[0] || '';
-    if (selectedColorHex && selectedSize) {
-      addItem(product, selectedSize, selectedColorHex, 1, selectedColorName);
-    } else {
-      navigate(`/product/${product.id}`);
-    }
-  };
 
   /* ---------------- why-snippet ---------------- */
   const whySnippet = (() => {
@@ -311,24 +295,29 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </div>
           </div>
 
-          {/* add to cart */}
+          {/* check it out */}
           <div className="mt-4 relative">
             <motion.button
-              ref={addToCartBtnRef}
               onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleAddToCart();
+                // Use userPrefs if available, else defaults
+                const preferredSize = userPrefs.size || 'Medium';
+                const preferredColorName = userPrefs.color || 'Black';
+                // Try to find color hex for preferredColorName
+                let colorHex = product.colors?.find(c => c.name?.toLowerCase() === preferredColorName.toLowerCase())?.hex || product.colors?.[0]?.hex || '';
+                navigate(`/product/${product.id}`, {
+                  state: {
+                    preferredSize,
+                    preferredColor: colorHex,
+                    preferredColorName
+                  }
+                });
               }}
-              whileTap={{
-                backgroundColor: '#FBBF24',
-                color: '#1a1a1a',
-                boxShadow: '0 0 0 4px #FBBF24',
-                transition: { duration: 0.15 }
-              }}
-              className="w-full bg-black text-white text-sm py-2 px-4 rounded-md hover:bg-gray-900 transition-colors duration-200 flex items-center justify-center gap-2 relative focus:outline-none"
+              whileTap={{ scale: 0.96 }}
+              className="w-full bg-orange-600 text-white text-sm py-2 px-4 rounded-md hover:bg-orange-700 transition-colors duration-200 flex items-center justify-center gap-2 relative focus:outline-none font-bold"
             >
-              <ShoppingBag className="w-4 h-4" /> Add to Cart
+              <span>Check it Out</span>
             </motion.button>
           </div>
 

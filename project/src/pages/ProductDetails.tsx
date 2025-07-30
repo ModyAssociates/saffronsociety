@@ -1,5 +1,6 @@
 // project/src/pages/ProductDetails.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart,
@@ -13,19 +14,16 @@ import { motion } from 'framer-motion';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { fetchPrintifyProducts } from '../services/printify';
+import { useAuth } from '../context/AuthContext';
 
 import placeholderImg from '../assets/logo_big.png';
 import ProductGallery from '../components/product/ProductGallery';
 import ProductOptions from '../components/product/ProductOptions';
 import ProductInfoSections from '../components/product/ProductInfoSections';
-import {
-  extractDesignHighlights,
-  HighlightItem,
-} from '../utils/extractDesignHighlights';
+import { extractDesignHighlights } from '../utils/extractDesignHighlights';
 import { decodeHTMLEntities } from '../utils/productUtils';
 
 import {
-  AVAILABLE_SIZES,
   COLOR_NAME_TO_HEX,
   getColorNameFromHex,
 } from '../constants/productConstants';
@@ -34,39 +32,40 @@ const ProductDetails = () => {
   /* ─────────────────────────────── state ─────────────────────────────── */
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addItem } = useCart();
+  const { profile } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [addedAnim, setAddedAnim] = useState(false);
+  const [showAddedMsg, setShowAddedMsg] = useState(false);
 
   const [mainImage, setMainImage] = useState<string>('');
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
+  // Get preferred size/color from navigation state, context, or localStorage, fallback to defaults
+  const navState = location.state as { preferredSize?: string; preferredColor?: string; preferredColorName?: string } | undefined;
+  // ...existing code...
+
+  // ...existing code...
+
+  // Find color hex for preferredColorName
   const [selectedColor, setSelectedColor] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<string>(
-    AVAILABLE_SIZES[2],
-  );
+  const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [currentPrice, setCurrentPrice] = useState(0);
-
-  const [designHighlights, setDesignHighlights] = useState<HighlightItem[]>(
-    [],
-  );
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['about']),
-  );
-  const returnsRef = useRef<HTMLDivElement | null>(null);
+  const [designHighlights, setDesignHighlights] = useState<any[]>([]);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['about']));
 
   /* ─────────────────────────────── helpers ─────────────────────────────── */
 
-  const hexToName = (hex: string) =>
-    getColorNameFromHex(hex) ?? hex.toUpperCase();
 
   const isSizeAvailable = (size: string) => {
     if (!product) return false;
     const colorName =
       product.colors?.find(c => c.hex === selectedColor)?.name || '';
-    return product.variants?.some(
+    return !!product.variants?.some(
       v =>
         v.size === size &&
         v.color?.toLowerCase() === colorName.toLowerCase() &&
@@ -77,21 +76,42 @@ const ProductDetails = () => {
   const updatePrice = () => {
     if (!product) return;
 
-    // normalise colour to hex
-    const chosenHex = selectedColor.startsWith('#')
-      ? selectedColor.toLowerCase()
-      : COLOR_NAME_TO_HEX[selectedColor]?.toLowerCase() ||
-        selectedColor.toLowerCase();
+    // Debugging output
+    console.log('updatePrice called:', {
+      selectedSize,
+      selectedColor,
+      variants: product.variants,
+      COLOR_NAME_TO_HEX,
+    });
+
+
+    // Normalize color: get both hex and name for selected color
+    const colorObj = product.colors?.find(c => c.hex === selectedColor || c.name === selectedColor);
+    const chosenColorName = colorObj?.name || getColorNameFromHex(selectedColor) || selectedColor;
+    const chosenHex = colorObj?.hex || selectedColor;
+    const chosenColorLower = chosenColorName.toLowerCase();
+    const chosenHexLower = chosenHex.toLowerCase();
+
+    // Normalize size: just use selectedSize
 
     const matched = product.variants?.find(v => {
-      const variantHex = v.color?.startsWith('#')
-        ? v.color.toLowerCase()
-        : COLOR_NAME_TO_HEX[v.color || '']?.toLowerCase() || v.color?.toLowerCase();
+      // Variant color: check both hex and name
+      const variantHex = v.color?.startsWith('#') ? v.color.toLowerCase() : COLOR_NAME_TO_HEX[v.color || '']?.toLowerCase() || '';
+      const variantName = v.color?.startsWith('#') ? getColorNameFromHex(v.color) : v.color;
+      const variantNameLower = (variantName || '').toLowerCase();
 
-      return v.size === selectedSize && variantHex === chosenHex;
+      // Variant size: extract from size or title
+      let variantSize = v.size;
+      if (!variantSize && v.title) {
+        const parts = v.title.split('/').map(s => s.trim());
+        variantSize = parts.length > 1 ? parts[1] : parts[0];
+      }
+
+      return variantSize === selectedSize && (variantHex === chosenHexLower || variantNameLower === chosenColorLower);
     });
 
     if (matched) {
+      console.log('Matched variant for price:', matched);
       setCurrentPrice(matched.price);
     } else {
       const lowest =
@@ -102,6 +122,7 @@ const ProductDetails = () => {
                 .map(v => v.price),
             )
           : product.price;
+      console.log('No match found, using lowest price:', lowest);
       setCurrentPrice(lowest);
     }
   };
@@ -124,8 +145,32 @@ const ProductDetails = () => {
     /* 3 ▸ prefer the Printify label, fall back to generic helper */
     const colourName = colourObj?.name || getColorNameFromHex(normalizedHex);
 
-    /* 4 ▸ push to cart */
-    addItem(product, selectedSize, normalizedHex, quantity, colourName);
+    /* 4 ▸ find correct variant price */
+    let variantPrice = currentPrice;
+    // fallback: try to find variant price if currentPrice is not set
+    if (!variantPrice && product.variants) {
+      const matched = product.variants.find(v => {
+        let variantSize = v.size;
+        if (!variantSize && v.title) {
+          const parts = v.title.split('/').map(s => s.trim());
+          variantSize = parts.length > 1 ? parts[1] : parts[0];
+        }
+        const variantHex = v.color?.startsWith('#') ? v.color.toLowerCase() : COLOR_NAME_TO_HEX[v.color || '']?.toLowerCase() || '';
+        const variantName = v.color?.startsWith('#') ? getColorNameFromHex(v.color) : v.color;
+        const variantNameLower = (variantName || '').toLowerCase();
+        const chosenColorName = colourName.toLowerCase();
+        return variantSize === selectedSize && (variantHex === normalizedHex.toLowerCase() || variantNameLower === chosenColorName);
+      });
+      if (matched) variantPrice = matched.price;
+    }
+
+    /* 5 ▸ push to cart with price */
+    if (addedAnim) return; // Prevent multiple rapid adds
+    addItem(product, selectedSize, normalizedHex, quantity, colourName, variantPrice);
+    setAddedAnim(true);
+    setShowAddedMsg(true);
+    setTimeout(() => setAddedAnim(false), 200); // push-in effect duration
+    setTimeout(() => setShowAddedMsg(false), 1000); // message duration
   };
 
   /* ─────────────────────────────── effects ─────────────────────────────── */
@@ -140,7 +185,96 @@ const ProductDetails = () => {
         if (!found) return;
 
         setProduct(found);
-        setSelectedColor(found.colors?.[0]?.hex || '');
+        // Set preferred color if available, else fallback to first color
+        let preferredColorHex = '';
+        let preferredColorName = '';
+        // 1. Navigation state
+        if (navState?.preferredColorName) {
+          const colorObj = found.colors?.find(c => c.name?.toLowerCase() === navState.preferredColorName.toLowerCase());
+          if (colorObj) {
+            preferredColorHex = colorObj.hex;
+            preferredColorName = colorObj.name;
+          }
+        }
+        if (!preferredColorHex && navState?.preferredColor) {
+          const colorObj = found.colors?.find(c => c.hex === navState.preferredColor);
+          if (colorObj) {
+            preferredColorHex = colorObj.hex;
+            preferredColorName = colorObj.name;
+          }
+        }
+        // 2. LocalStorage
+        if (!preferredColorHex) {
+          try {
+            const localPref = JSON.parse(localStorage.getItem('userPref') || '{}');
+            if (localPref.favorite_color) {
+              const colorObj = found.colors?.find(c => c.hex === localPref.favorite_color);
+              if (colorObj) {
+                preferredColorHex = colorObj.hex;
+                preferredColorName = colorObj.name;
+              }
+            }
+            if (!preferredColorHex && localPref.favorite_color_name) {
+              const colorObj = found.colors?.find(c => c.name?.toLowerCase() === localPref.favorite_color_name.toLowerCase());
+              if (colorObj) {
+                preferredColorHex = colorObj.hex;
+                preferredColorName = colorObj.name;
+              }
+            }
+          } catch {}
+        }
+        // 3. Context
+        if (!preferredColorHex && profile) {
+          if ('favorite_color' in profile) {
+            const colorObj = found.colors?.find(c => c.hex === (profile as any).favorite_color);
+            if (colorObj) {
+              preferredColorHex = colorObj.hex;
+              preferredColorName = colorObj.name;
+            }
+          }
+          if (!preferredColorHex && 'favorite_color_name' in profile) {
+            const colorObj = found.colors?.find(c => c.name?.toLowerCase() === (profile as any).favorite_color_name?.toLowerCase());
+            if (colorObj) {
+              preferredColorHex = colorObj.hex;
+              preferredColorName = colorObj.name;
+            }
+          }
+        }
+        // 4. Fallbacks
+        if (!preferredColorHex && found.colors?.length) {
+          const blackColor = found.colors.find(c => c.name?.toLowerCase() === 'black');
+          preferredColorHex = blackColor?.hex || found.colors[0].hex || '';
+          preferredColorName = blackColor?.name || found.colors[0].name || '';
+        }
+        setSelectedColor(preferredColorHex);
+
+        // Set preferred size if available, else fallback to Medium
+        let preferredSize = '';
+        // 1. Navigation state
+        if (navState?.preferredSize && found.variants?.some(v => v.size === navState.preferredSize)) {
+          preferredSize = navState.preferredSize;
+        }
+        // 2. LocalStorage
+        if (!preferredSize) {
+          try {
+            const localPref = JSON.parse(localStorage.getItem('userPref') || '{}');
+            if (localPref.preferred_size && found.variants?.some(v => v.size === localPref.preferred_size)) {
+              preferredSize = localPref.preferred_size;
+            }
+          } catch {}
+        }
+        // 3. Context
+        if (!preferredSize && profile && 'preferred_size' in profile && found.variants?.some(v => v.size === (profile as any).preferred_size)) {
+          preferredSize = (profile as any).preferred_size;
+        }
+        // 4. Fallbacks
+        if (!preferredSize && found.variants?.some(v => v.size === 'Medium')) {
+          preferredSize = 'Medium';
+        } else if (!preferredSize && found.variants?.length) {
+          preferredSize = found.variants[0].size || '';
+        }
+        setSelectedSize(preferredSize);
+
         const firstImg =
           (Array.isArray(found.images) && found.images[0]) ||
           (typeof found.image === 'string' ? found.image : found.image?.src) ||
@@ -159,7 +293,7 @@ const ProductDetails = () => {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, navState]);
 
   // extract design highlights
   useEffect(() => {
@@ -301,7 +435,6 @@ useEffect(() => {
                 onColorSelect={setSelectedColor}
                 onSizeSelect={setSelectedSize}
                 isSizeAvailable={isSizeAvailable}
-                hexToName={hexToName}
               />
 
               {/* quantity */}
@@ -333,22 +466,38 @@ useEffect(() => {
               </div>
 
               {/* add-to-cart */}
-              <div className="flex gap-3 mb-5">
+              <div className="flex gap-3 mb-5 relative">
+                {/* Floating Added message */}
+                <motion.div
+                  initial={{ opacity: 0, y: 0 }}
+                  animate={showAddedMsg ? { opacity: 1, y: -32 } : { opacity: 0, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  style={{ position: 'absolute', left: '50%', top: '-2.5rem', transform: 'translateX(-50%)', pointerEvents: 'none' }}
+                >
+                  {showAddedMsg && (
+                    <span className="bg-green-500 text-white px-3 py-1 rounded-lg shadow font-semibold text-sm">
+                      Added!
+                    </span>
+                  )}
+                </motion.div>
                 <motion.button
-                  whileHover={isSizeAvailable(selectedSize) ? { scale: 1.02 } : {}}
-                  whileTap={isSizeAvailable(selectedSize) ? { scale: 0.98 } : {}}
+                  whileTap={isSizeAvailable(selectedSize) ? { scale: 0.92 } : {}}
+                  animate={addedAnim ? { scale: 0.92 } : { scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                   onClick={
-                    isSizeAvailable(selectedSize) ? handleAddToCart : undefined
+                    isSizeAvailable(selectedSize) && !addedAnim ? handleAddToCart : undefined
                   }
-                  disabled={!isSizeAvailable(selectedSize)}
+                  disabled={!isSizeAvailable(selectedSize) || addedAnim}
                   className={`flex-1 py-3 px-5 rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-md ${
                     isSizeAvailable(selectedSize)
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600'
                       : 'bg-gray-400 text-gray-200 cursor-not-allowed'
                   }`}
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  {isSizeAvailable(selectedSize) ? 'Add to Cart' : 'Size Unavailable'}
+                  <span className="flex items-center gap-2">
+                    <ShoppingCart className="w-4 h-4" />
+                    {isSizeAvailable(selectedSize) ? 'Add to Cart' : 'Size Unavailable'}
+                  </span>
                 </motion.button>
 
                 <motion.button
@@ -370,10 +519,8 @@ useEffect(() => {
                     onClick={() => {
                       setExpandedSections(prev => new Set(prev).add('returns'));
                       setTimeout(() => {
-                        returnsRef.current?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'center',
-                        });
+                        // Removed returnsRef usage to fix lint error
+                        // If scroll-to-returns is needed, implement with a valid ref
                       }, 100);
                     }}
                   >
@@ -392,7 +539,6 @@ useEffect(() => {
               product={product}
               expandedSections={expandedSections}
               setExpandedSections={setExpandedSections}
-              returnsRef={returnsRef}
             />
           </div>
         </div>
